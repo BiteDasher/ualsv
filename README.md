@@ -40,3 +40,14 @@ rm -r /tmp/trashcan
 /etc/backup.folder
 /etc/backup.symlink
 ```
+
+## Dependencies:
+`gawk` \
+`sed` \
+`coreutils` \
+`bash` \
+`wget` \
+`curl` \
+`git` \
+`grep` \
+`pacman`
