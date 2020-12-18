@@ -99,8 +99,17 @@ list_scripts_local() {
 }
 restore_backup() {
 	isroot "(restore backup files)"
-	cd $DIR/local/$ARG/backup_place || die "better safe than sorry"
-	chown -R root:root ./$(ls . -A -N -v -w 1)
+	### Better safe than sorry
+	if [ -d "$DIR"/local/"$ARG"/backup_place ]; then
+		cd "$DIR"/local/"$ARG"
+		o_user="$(stat -c %u ./backup_place)"
+		o_group="$(stat -c %g ./backup_place)"
+		chown -R 0:0 ./backup_place
+		
+	else
+		exit 1
+	fi
+	cd $DIR/local/$ARG/backup_place
 	while read -r restore_file; do
 		local mode="$(stat -c %a ".$restore_file")"
 		local type="$(stat -c %f ".$restore_file")"
@@ -109,8 +118,9 @@ restore_backup() {
 			81a4) install -D -m $mode ".$restore_file" "$restore_file" || error "$restore_file" ;;
 			41ed) install -d -m $mode "$restore_file" || error "$restore_file" ;;
 		esac
-	done < ../backup || die Something went wrong
+	done < ../backup || { chown -R $o_user:$o_group "$DIR"/local/"$ARG"/backup_place; die Something went wrong; }
 	success Done
+	chown -R $o_user:$o_group "$DIR"/local/"$ARG"/backup_place
 }
 save_backup() {
 	cd $DIR/local/$ARG/backup_place
@@ -178,7 +188,7 @@ get|install|get-again)
 	cp -a -r "$DIR"/database/"$2" $DIR/local/
 	cd "$DIR"/local/"$2"
 	if [ -f ./backup ] && [ ! -f "$DIR"/local/"$2"/installed ]; then
-		[ "$(stat -c %u ./backup_place)" == 0 ] && sudo rm -rf backup_place || rm -rf backup_place
+		rm -rf backup_place
 		mkdir backup_place
 		ARG="$2" save_backup
 		BACKUP=1
