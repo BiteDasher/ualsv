@@ -99,13 +99,14 @@ list_scripts_local() {
 }
 restore_backup() {
 	isroot "(restore backup files)"
-	cd $DIR/local/$ARG/backup_place
+	cd $DIR/local/$ARG/backup_place || die "better safe than sorry"
+	chown -R root:root ./$(ls . -A -N -v -w 1)
 	while read -r restore_file; do
 		local mode="$(stat -c %a ".$restore_file")"
 		local type="$(stat -c %f ".$restore_file")"
 		case $type in
 			a1ff) ln -s "$(readlink ".$restore_file")" "$restore_file" || error "$restore_file" ;;
-			81a4) install -m $mode ".$restore_file" "$restore_file" || error "$restore_file" ;;
+			81a4) install -D -m $mode ".$restore_file" "$restore_file" || error "$restore_file" ;;
 			41ed) install -d -m $mode "$restore_file" || error "$restore_file" ;;
 		esac
 	done < ../backup || die Something went wrong
@@ -118,7 +119,8 @@ save_backup() {
 		local mode="$(stat -c %a "$restore_file")"
 		case $type in
 			41ed) install -d -m $mode ".$restore_file" || error "$restore_file" ;;
-			*) install -m $mode "$restore_file" ".$restore_file" || error "$restore_file" ;;
+			a1ff) install -d "$(dirname ".$restore_file")"; ln -s "$(readlink "$restore_file")" ".$restore_file" || error "$restore_file" ;;
+			81a4) install -D -m $mode "$restore_file" ".$restore_file" || error "$restore_file" ;;
 		esac
 	done < ../backup || die Something went wrong
 	success Done
@@ -175,12 +177,13 @@ get|install|get-again)
 	fi ####
 	cp -a -r "$DIR"/database/"$2" $DIR/local/
 	cd "$DIR"/local/"$2"
-	if [ -f ./backup ]; then
+	if [ -f ./backup ] && [ ! -f "$DIR"/local/"$2"/installed ]; then
+		[ "$(stat -c %u ./backup_place)" == 0 ] && sudo rm -rf backup_place || rm -rf backup_place
 		mkdir backup_place
 		ARG="$2" save_backup
 		BACKUP=1
 	fi
-	cd ..
+	[ ! -f ./script ] && cd ..
 	source ./script
 	CURDIR="$(pwd)"
 	[ "$packages" ] && { out "Started downloading required packages using pacman"; install_pkgs || die "Something went wrong while receiving"; }
@@ -200,11 +203,11 @@ get|install|get-again)
 		process "Found function action"
 		functions+=('action')
 	else
-		process "Function 2 not found!"
-		die "Function 2 required for basic package actions not found"
+		process "Function action not found!"
+		die "Function action required for basic package actions not found"
 	fi
 	[ "$(declare -f cleanup 2>/dev/null)" ] && { process "Found function cleanup"; do_cleanup=true; }
-	[ "$(declare -f restore 2>/dev/null)" ] && { process "Found function restore_cleanup"; restore=true; }
+	[ "$(declare -f restore 2>/dev/null)" ] && { process "Found function restore"; restore=true; }
 	[ "$(declare -f restore_cleanup 2>/dev/null)" ] && { process "Found function restore_cleanup"; restore_cleanup=true; }
 	success "Step 2 - done"
 	for function in ${functions[@]}; do
@@ -270,14 +273,13 @@ restore)
 	[ "$2" ] || die Enter the name of the script you want to remove
 	[ -d "$DIR"/local/"$2" ] || die "No script found with name $2"
 	[ -f "$DIR"/local/"$2"/installed ] || die "This patch is not applied"
-	if source <(source "$DIR"/local/"$2"/script; declare -f restore); then
+	if source <(source "$DIR"/local/"$2"/script) && declare -f restore &>/dev/null; then
 		source "$DIR"/local/"$2"/script
-		restore || error "Failed tp restore"
+		restore || error "Failed to restore"
 		declare -f restore_cleanup &>/dev/null && restore_cleanup
-	else
+	fi
 	[ -d "$DIR"/local/"$2"/backup_place ] || die "No backup folder found with name $2"
 	ARG="$2" restore_backup || die "Failed to restore backup"
-	fi
 	rm $DIR/local/"$2"/installed
 	success "Done!"
 ;;
