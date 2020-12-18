@@ -5,7 +5,8 @@ Useful Arch Linux Script Vault
 This is `ualsv`. a script that can apply patches to files, or restore them to their original state if necessary.
 
 ## How to use it?
-Execute `./ualsv.sh help` for more information
+Execute `./ualsv.sh help` for more information \
+Do not forget execute `install -Dm755 checkutils.sh /usr/local/bin/checkutils.sh`
 
 ## How/where to download scripts for this thing? How do I write my own?
 I'm still thinking about where I should store and whether I should store the script files for this program at all. But as soon as I do, I will definitely report it here. And at the expense of writing your script, I will now show you one of the examples:
