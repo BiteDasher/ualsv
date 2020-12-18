@@ -8,7 +8,7 @@ This is `ualsv`. a script that can apply patches to files, or restore them to th
 Execute `./ualsv.sh help` for more information
 
 ## How/where to download scripts for this thing? How do I write my own?
-I'm still thinking about where I should store and whether I should store the script files for this program at all. But as soon as I do, I will definitely report it here. And at the expense of writing your script, I will now show you one of the examples: \
+I'm still thinking about where I should store and whether I should store the script files for this program at all. But as soon as I do, I will definitely report it here. And at the expense of writing your script, I will now show you one of the examples:
 ```
 test --- script
     \___ backup
@@ -50,4 +50,5 @@ rm -r /tmp/trashcan
 `curl` \
 `git` \
 `grep` \
-`pacman`
+`pacman` \
+`yay (AUR)`
