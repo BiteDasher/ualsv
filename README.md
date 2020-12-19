@@ -65,38 +65,64 @@ If you want to list all the commands that the second `checkutils.sh` script prov
 
 ## Function scheme from file `checkutils.sh`
 `isfe` : Checks if file `$1` exists. \
-`    ` | Add. arguments : `($2):null` - redirect warning to /dev/null \
+`    ` | Add. arguments : `($2):null` - redirect warning to /dev/null
+
 `isde` : Checks if directory `$1` exists. \
-`    ` | Add. arguments : `($2):null` - redirect warning to /dev/null \
+`    ` | Add. arguments : `($2):null` - redirect warning to /dev/null
+
 `isee` : Checks if -`$1` `$2` exists. \
-`    ` | Add. arguments : `($3):null` - redirect warning to /dev/null \
-`grepfile` : grep pattern `$1` from file `$2` \
+`    ` | Add. arguments : `($3):null` - redirect warning to /dev/null
+
+`grepfile` : grep pattern `$1` from file `$2`
+
 `user_read` : Reads user variable `$1` with prompt `${@:2}` \
-`         ` | Add. arguments : Run with variable `$YN=Y(or)N` to ask a question and give the user an answer \
-`out` : echo ===> $@ \
-`die` : echo (die function) and exit 1 \
-`warning` : echo yellow ===> and WARNING: $@ \
-`error` : echo red ===> and ERROR: $@ \
-`success` : echo green ---> and $@ \
-`process` : echo \t(tab) and $@ \
-`sendnull` : Execute command with redirection &\>/dev/null \
-`mktempd` : Creates a temporary directory with `mktemp -d`, then exports it as `MKTEMPDIR` variable \
-`rmtempd` : Removes a temporaru directory and unset `MKTEMPDIR` variable \
-`exitcheck` : (see file) \
-`install_service` : Installs file `$1` to `/etc/systemd/system`, or, if file exists, returns warning and `return 1` \
-`remove_service` : Removes file `$1` from `/etc/systemd/system` \
+`         ` | Add. arguments : Run with variable `$YN=Y(or)N` to ask a question and give the user an answer
+
+`out` : echo ===> $@
+
+`die` : echo (die function) and exit 1
+
+`warning` : echo yellow ===> and WARNING: $@
+
+`error` : echo red ===> and ERROR: $@
+
+`success` : echo green ---> and $@
+
+`process` : echo \t(tab) and $@
+
+`sendnull` : Execute command with redirection &\>/dev/null
+
+`mktempd` : Creates a temporary directory with `mktemp -d`, then exports it as `MKTEMPDIR` variable
+
+`rmtempd` : Removes a temporaru directory and unset `MKTEMPDIR` variable
+
+`exitcheck` : (see file)
+
+`install_service` : Installs file `$1` to `/etc/systemd/system`, or, if file exists, returns warning and `return 1`
+
+`remove_service` : Removes file `$1` from `/etc/systemd/system`
+
 `enable_service` : Enables `$1` using `systemctl enable` \
-`              ` | Add. arguments : `($2):--now` - executes `systemctl enable --now` \
+`              ` | Add. arguments : `($2):--now` - executes `systemctl enable --now`
+
 `disable_service` : Disables `$1` using `systemctl disable` \
-`               ` | Add. arguments : `($2):--now` - executes `systemctl disable --now` \
+`               ` | Add. arguments : `($2):--now` - executes `systemctl disable --now`
+
 `redirect` : Redirects the contents of the variable `$text` to the specified file `($1)` \
-`        ` | Add. arguments : `($2):sudo` - executes `sudo tee` instead of `tee` \
-`redirect_a` : like `redirect`, but `tee -a` \
-`cat_redirect` : like `redirect`, but reads `stdout` \
-`cat_redirect_a` : like `cat_redirect`, but `tee -a` \
+`        ` | Add. arguments : `($2):sudo` - executes `sudo tee` instead of `tee`
+
+`redirect_a` : like `redirect`, but `tee -a`
+
+`cat_redirect` : like `redirect`, but reads `stdout`
+
+`cat_redirect_a` : like `cat_redirect`, but `tee -a`
+
 `ispe` : Checks if package `$1` is installed locally \
-`    ` : Add. arguments: `($2):null` - redirect warning to /dec/null \
-`instpkg` : Installs packages `$@` \
-`instaur` : Installs packages `$@` using `yay` \
+`    ` | Add. arguments: `($2):null` - redirect warning to /dec/null
+
+`instpkg` : Installs packages `$@`
+
+`instaur` : Installs packages `$@` using `yay`
+
 `rmpkg` : Removes packages `$@` \
 `     ` | Add. arguments : `($1)` - If you want to run `pacman -R` with additional arguments (for example `ns`), enter: `ns` as the first argument. If in the first argument the first character is not `:`, packages will be installed from `1` to the `last` argument
