@@ -21,7 +21,7 @@ update_system() {
 	sudo pacman -Syu
 }
 install_pkgs() {
-	sudo pacman -S ${packages[@]} || die Failed to install packages
+	sudo pacman -S ${packages[@]} --asdeps || die Failed to install packages
 }
 install_aurs() {
 	yay -S ${aur[@]} || die Failed to install packages from AUR using yay
@@ -126,6 +126,18 @@ list_scripts_local() {
     paste $DIR/.temp_list_status $DIR/.temp_list_name $DIR/.temp_list_version $DIR/.temp_list_creator | column -tc 4
     rm $DIR/.temp_list*
 }
+after_pkg() {
+[ -s ../packages ] || return 0
+[ "$1" ] && place="$1" || place=".."
+free_pkgs="$(pacman -Qdtq)"
+while read -r pkg; do
+	if [ "$(grep -x "$pkg" <<< "${free_pkgs}")" ]; then
+		sudo pacman -Rs $pkg
+	else
+		process "$pkg skipped"
+	fi
+done < $place/packages
+}
 restore_backup() {
 	isroot "(restore backup files)"
 	### Better safe than sorry
@@ -143,6 +155,10 @@ restore_backup() {
 		exit 1
 	fi
 	cd $DIR/local/$ARG/backup_place
+	if [ -f ../packages ]; then
+	out "Removing unnecessary packages"
+	after_pkg
+	fi
 	while read -r restore_file; do
 		local mode="$(stat -c %a ".$restore_file")"
 		local type="$(stat -c %f ".$restore_file")"
@@ -239,15 +255,19 @@ get|install|get-again)
 	[ ! -f ./script ] && cd ..
 	source ./script
 	CURDIR="$(pwd)"
+	[ "$get" ] && { out "Downloading the required files started"; get_files || die "Something went wrong while receiving"; }
+	if [ "$(declare -f check 2>/dev/null)" ]; then
+		out "Found function check. Executing..."
+		[ "$(check; echo $?)" == 5 ] && {
+						after_pkg ""$DIR"/local/"$2""
+						rm -rf "$DIR"/local/"$2"
+						exit 0
+						}
+	fi
 	[ "$packages" ] && { out "Started downloading required packages using pacman"; install_pkgs || die "Something went wrong while receiving"; }
 	[ "$aur" ] && { out "Started downloading required packages using yay (AUR)"; install_aurs || die "Something went wrong while receiving"; }
-	[ "$get" ] && { out "Downloading the required files started"; get_files || die "Something went wrong while receiving"; }
 	success "Step 1 - done"
 	out "Checking possible functions has started"
-	if [ "$(declare -f check 2>/dev/null)" ]; then
-		process "Found function check"
-		functions+=('check')
-	fi
 	if [ "$(declare -f build 2>/dev/null)" ]; then
 		process "Found function build"
 		functions+=('build')
@@ -275,6 +295,10 @@ get|install|get-again)
 	[ "$do_cleanup" == true ] && { process "Executing cleanup"; cleanup; }
 	success "Step 3 - done"
 	touch "$DIR"/local/"$2"/installed
+	if [ "$packages" ]; then
+		__cleaned_pkgs="$(grep -v -x -f <(pacman -Qsq) <(echo "${packages[@]}" | tr " " "\n"))"
+		echo "$__cleaned_pkgs" > "$DIR"/local/"$2"/packages
+	fi
 	success "$2 successfully applied!"
 	exit 0
 ;;
@@ -315,7 +339,7 @@ remove)
 	[ -d "$DIR"/database/"$2" ] || die "No script found with name $2"
 		YN=N user_read zero "A directory with a backup copy was found for script "$2". Continue?"
 		case "$answer" in
-			yes) remove_script "$2" || error "Something went wrong while deleting the script folder from the local database" ;;
+			yes) after_pkg ""$DIR"/local/"$2""; remove_script "$2" || error "Something went wrong while deleting the script folder from the local database" ;;
 			no) exit 0 ;;
 			*) die Unknown answer ;;
 		esac
@@ -344,7 +368,7 @@ clean)
 		cd "$pkg"
 		for file in ./*; do
 			case "$file" in
-				./script|./backup|./backup_place|./installed) : ;;
+				./script|./backup|./backup_place|./installed|./packages) : ;;
 				*) rm -rf "$file" ;;
 			esac
 		done

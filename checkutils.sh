@@ -76,6 +76,10 @@ mktempd() {
 rmtempd() {
 	[ "$MKTEMPDIR" ] && rm -rf $MKTEMPDIR; unset MKTEMPDIR
 }
+exitcheck() {
+	echo -e "\e[0;36m>>>\e[0m The 'check' function could not find the required lines for the patch. Exiting the script..."
+	return 5
+}
 install_service() {
 	if [ -f "/etc/systemd/system/"$1"" ]; then
 		warning Service file "$1" already exists

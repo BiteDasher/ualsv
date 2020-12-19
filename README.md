@@ -45,6 +45,11 @@ rm -r /tmp/trashcan
 /etc/backup.symlink
 ```
 
+## Recommendations:
+The `check` function is executed BEFORE installing packages from the `$packages` and `$aur` arrays. \
+If you want to list all the commands that the second `checkutils.sh` script provides, run `cat checkutils.sh | grep -o '^.*() {$' | cut -d "(" -f1` \
+
+
 ## Dependencies:
 `gawk` \
 `sed` \
