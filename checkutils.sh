@@ -77,7 +77,18 @@ rmtempd() {
 	[ "$MKTEMPDIR" ] && rm -rf $MKTEMPDIR; unset MKTEMPDIR
 }
 exitcheck() {
-	echo -e "\e[0;36m>>>\e[0m The 'check' function failed. Reason: $@"
+	if [ "$1" ]; then
+		case "$1" in
+			1) local reason="Could not find required files on the system" ;;
+			2) local reason="Unable to find the required lines that need to be patched" ;;
+			3) local reason="Required packages are missing" ;;
+			4) local reason="Failed to read the required files for the patch" ;;
+			*) local reason="$@" ;;
+		esac
+	else
+		local reason="unknown"
+	fi
+	echo -e "\e[0;36m>>>\e[0m The 'check' function failed. Reason: $reason"
 	return 5
 }
 install_service() {
