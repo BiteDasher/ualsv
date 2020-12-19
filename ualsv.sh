@@ -259,7 +259,6 @@ get|install|get-again)
 	if [ "$(declare -f check 2>/dev/null)" ]; then
 		out "Found function check. Executing..."
 		check; [ "$(echo $?)" == 5 ] && {
-						after_pkg ""$DIR"/local/"$2""
 						rm -rf "$DIR"/local/"$2"
 						exit 0
 						}
