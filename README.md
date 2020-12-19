@@ -52,4 +52,5 @@ rm -r /tmp/trashcan
 `git` \
 `grep` \
 `pacman` \
+`sudo` \
 `yay (AUR)`

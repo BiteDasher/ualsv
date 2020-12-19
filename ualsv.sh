@@ -174,18 +174,20 @@ get|install|get-again)
 	[ "$2" ] || die Enter the name of the script you want to apply
 	[ -d "$DIR"/database/"$2" ] || die "No script found with name $2"
 	out The process of getting and running script "$2" has begun
-	if [[ "$1" -ne "get-again" ]]; then ####
-	if [ -f "$DIR"/local/"$2"/installed ]; then
-		warning "The directory with script 1 already exists. Use the get-again parameter"
-		YN=N user_read zero This script has already been applied. Reinstall without restoring the backup?
-		case "$answer" in
-			yes) remove_script "$2" || error "Something went wrong while deleting the script folder from the local database" ;;
-			no) exit 0 ;;
-			*) die Unknown answer ;;
-		esac
-	fi
-	fi ####
+	if [[ "$1" == "get-again" ]]; then ####
+		[ -f "$DIR"/local/"$2"/installed ] && die "Patch already applied :)"
+	else
+		if [ -f "$DIR"/local/"$2"/installed ]; then
+			warning "The directory with script $2 already exists. Use the get-again parameter"
+			YN=N user_read zero "This script has already been applied. Reinstall without restoring the backup?"
+			case "$answer" in
+				yes) remove_script "$2" || error "Something went wrong while deleting the script folder from the local database" ;;
+				no) exit 0 ;;
+				*) die Unknown answer ;;
+			esac
+		fi
 	cp -a -r "$DIR"/database/"$2" $DIR/local/
+	fi ####
 	cd "$DIR"/local/"$2"
 	if [ -f ./backup ] && [ ! -f "$DIR"/local/"$2"/installed ]; then
 		rm -rf backup_place
