@@ -4,7 +4,7 @@ __unset="unset -f __redirect"
 isfe() {
 	[ "$2" ] && __redirect() { cat &>/dev/null; } || __redirect() { cat -; }
 	if [ ! -f "$1" ]; then
-		warning File "$1" does not exists | __redirect
+		warning File "$1" does not exists | __redirect; $__unset
 		return 1
 	else
 		return 0
