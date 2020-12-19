@@ -21,7 +21,7 @@ update_system() {
 	sudo pacman -Syu
 }
 install_pkgs() {
-	sudo pacman -S ${packages[@]} --asdeps || die Failed to install packages
+	sudo pacman -S ${packages[@]} --asdeps --needed || die Failed to install packages
 }
 install_aurs() {
 	yay -S ${aur[@]} || die Failed to install packages from AUR using yay
