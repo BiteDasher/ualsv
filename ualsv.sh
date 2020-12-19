@@ -32,12 +32,12 @@ get_files() {
 	for get_ in ${get[@]}; do
 	local source_get_mtd="$(echo $get_ | cut -d ":" -f 1)"
 	local place="$(echo $get_ | cut -d ":" -f 2)"
-	if [ "$place" == "-" ]; then
-		local place="${place##*/}"
+	local address="$(echo $_get | cut -d ":" -f 3-)"
+	if [ "$place" == "-" ] || [ -z "$place" ]; then
+		local place="${address##*/}"
 	fi
 	[[ -e "$place" ]] && [[ "$source_get_mtd" -ne "git" ]] && continue
 	[[ -e "$place" ]] && [[ "$source_get_mtd" -eq "git" ]] && rm -rf "$place"
-	local address="$(echo $_get | cut -d ":" -f 3-)"
 	case "${source_get_mtd}" in
 		wget) wget -O "$getdir"/"$place" "$address" -q --show-progress;;
 		curl) curl -L -o "$getdir"/"$place" --progress-bar "$address";;
@@ -155,6 +155,7 @@ usage: ualsv [options] script
 	remove		- Removes the script from the local database and all its data
 	restore		- Restores everything that the script touched during its work, as well as the installed status in the system
 	update		- Downloads the latest scripts using the git repository
+	clean		- Cleans folders of local script files from all foreign files
 	force-update	- Deletes and re-fetches data from the git repository
 	remove-force	- Removes the ualsv directory. All scripts will NOT be restored to backup
 
@@ -297,6 +298,17 @@ restore)
 ;;
 update)
 	update_scripts
+;;
+clean)
+	for pkg in "$DIR"/local/*; do
+		cd "$pkg"
+		for file in ./*; do
+			case "$file" in
+				./script|./backup|./backup_place|./installed) : ;;
+				*) rm -rf "$file" ;;
+			esac
+		done
+	done
 ;;
 force-update)
 	rm -rf "$DIR"/database

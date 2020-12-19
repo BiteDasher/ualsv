@@ -20,6 +20,9 @@ version="1-1"
 creator="Artemii (BiteDasher)"
 packages=('systemd')
 aur=('git-git')
+get=('git:-:https://github.com/exa/mple.get'
+     'curl:name_to_save:https://git.io/12345'
+     'wget:-:https://git.io/wow')
 check() {
 echo check
 }
