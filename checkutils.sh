@@ -1,29 +1,32 @@
 #!/bin/bash
 
+__unset="unset -f __redirect"
 isfe() {
-	[ "$2" ] && local redirect="&>/dev/null" || local redirect=""
+	[ "$2" ] && __redirect() { cat &>/dev/null; } || __redirect() { cat -; }
 	if [ ! -f "$1" ]; then
-		warning File "$1" does not exists $redirect
+		warning File "$1" does not exists | __redirect
 		return 1
 	else
 		return 0
 	fi
 }
 isde() {
-	[ "$2" ] && local redirect="&>/dev/null" || local redirect=""
+	[ "$2" ] && __redirect() { cat &>/dev/null; } || __redirect() { cat -; }
 	if [ ! -d "$1" ]; then
-		warning Directory "$1" does not exists $redirect
+		warning Directory "$1" does not exists | __redirect; $__unset
 		return 1
 	else
+		$__unset
 		return 0
 	fi
 }
 isee() {
-	[ "$2" ] && local redirect="&>/dev/null" || local redirect=""
+	[ "$2" ] && __redirect() { cat &>/dev/null; } || __redirect() { cat -; }
 	if [ ! $1 "$2" ]; then
-		warning "$1" does not exists $redirect
+		warning "$1" does not exists | __redirect; $__unset
 		return 1
 	else
+		$__unset
 		return 0
 	fi
 }
@@ -71,7 +74,7 @@ mktempd() {
 	export MKTEMPDIR="$(mktemp -d)"
 }
 rmtempd() {
-	[ "$MKTEMPDIR" ] && rm -rf $MKTEMPDIR
+	[ "$MKTEMPDIR" ] && rm -rf $MKTEMPDIR; unset MKTEMPDIR
 }
 install_service() {
 	if [ -f "/etc/systemd/system/"$1"" ]; then
@@ -111,11 +114,22 @@ cat_redirect_a() {
 	$redirect tee -a "$1" 1>/dev/null
 }
 ispe() {
-	[ "$2" ] && local redirect="&>/dev/null" || local redirect=""
+	[ "$2" ] && __redirect() { cat &>/dev/null; } || __redirect() { cat -; }
 	if pacman -Qsq | grep -x "$1" &>/dev/null; then
+		$__unset
 		return 0
 	else
-		warning Package "$1" does not exists $redirect
+		warning Package "$1" does not exists | __redirect; $__unset
 		return 1
 	fi
+}
+instpkg() {
+	sudo pacman -S $@ --noconfirm
+}
+instaur() {
+	yay -S $@ --noconfirm
+}
+rmpkg() {
+	[[ "$1" != ":"* ]] && { local pkgs="$@"; opt=; } || { local pkgs="${@:2}"; opt="${1##:}"; }
+	sudo pacman -R$opt $pkgs
 }
