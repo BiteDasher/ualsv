@@ -4,8 +4,8 @@
 LIB="/usr/local/share/ualsv"
 source $LIB/checkutils.sh
 DIR="$HOME/.ualsv"
-SERVER=" "
-if [ -f $DIR ]; then
+SERVER=" " ### Enter the address of your script repository here
+if [ ! -d $DIR ]; then
 	mkdir -p $DIR
 	mkdir -p $DIR/local
 	cd $DIR
