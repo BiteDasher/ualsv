@@ -77,7 +77,7 @@ rmtempd() {
 	[ "$MKTEMPDIR" ] && rm -rf $MKTEMPDIR; unset MKTEMPDIR
 }
 exitcheck() {
-	echo -e "\e[0;36m>>>\e[0m The 'check' function could not find the required lines for the patch. Exiting the script..."
+	echo -e "\e[0;36m>>>\e[0m The 'check' function failed. Reason: $@"
 	return 5
 }
 install_service() {

@@ -127,8 +127,8 @@ list_scripts_local() {
     rm $DIR/.temp_list*
 }
 after_pkg() {
-[ ! -s ../packages ] || return 0
 [ "$1" ] && place="$1" || place=".."
+[ ! -s $place/packages ] || return 0
 free_pkgs="$(pacman -Qdtq)"
 while read -u 3 -r pkg; do
 	if [ "$(grep -x "$pkg" <<< "${free_pkgs}")" ]; then
@@ -258,7 +258,7 @@ get|install|get-again)
 	[ "$get" ] && { out "Downloading the required files started"; get_files || die "Something went wrong while receiving"; }
 	if [ "$(declare -f check 2>/dev/null)" ]; then
 		out "Found function check. Executing..."
-		[ "$(check; echo $?)" == 5 ] && {
+		check; [ "$(echo $?)" == 5 ] && {
 						after_pkg ""$DIR"/local/"$2""
 						rm -rf "$DIR"/local/"$2"
 						exit 0
