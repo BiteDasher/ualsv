@@ -339,7 +339,7 @@ remove)
 	[ -d "$DIR"/database/"$2" ] || die "No script found with name $2"
 		YN=N user_read zero "A directory with a backup copy was found for script "$2". Continue?"
 		case "$answer" in
-			yes) after_pkg ""$DIR"/local/"$2""; remove_script "$2" || error "Something went wrong while deleting the script folder from the local database" ;;
+			yes) remove_script "$2" || error "Something went wrong while deleting the script folder from the local database" ;;
 			no) exit 0 ;;
 			*) die Unknown answer ;;
 		esac
@@ -355,6 +355,7 @@ restore)
 		restore && restored=1 || error "Failed to restore"
 		declare -f restore_cleanup &>/dev/null && restore_cleanup
 	fi
+	after_pkg "$DIR/local/$2"
 	[ -d "$DIR"/local/"$2"/backup_place ] || { [ "$restored" == 1 ] || die "No backup folder found with name $2"; }
 	ARG="$2" restore_backup || die "Failed to restore backup"
 	rm "$DIR"/local/"$2"/installed
