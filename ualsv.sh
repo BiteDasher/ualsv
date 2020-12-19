@@ -161,6 +161,7 @@ restore_backup() {
 	after_pkg
 	fi
 	while read -r restore_file; do
+		[[ -e ".$restore_file" ]] || { error "$restore_file not found, skipping"; continue; }
 		local mode="$(stat -c %a ".$restore_file")"
 		local type="$(stat -c %f ".$restore_file")"
 		case $type in
@@ -175,6 +176,7 @@ restore_backup() {
 save_backup() {
 	cd "$DIR"/local/"$ARG"/backup_place
 	while read -r restore_file; do
+		[[ -e "$restore_file" ]] || { warning "Skipping $restore_file since it doesn't exists"; continue; }
 		local type="$(stat -c %f "$restore_file")"
 		local mode="$(stat -c %a "$restore_file")"
 		case $type in
@@ -337,12 +339,16 @@ search)
 remove)
 	[ "$2" ] || die Enter the name of the script you want to remove
 	[ -d "$DIR"/database/"$2" ] || die "No script found with name $2"
+		if [ -d "$DIR"/local/"$2"/backup ] && [ -f "$DIR"/local/"$2"/installed ]; then
 		YN=N user_read zero "A directory with a backup copy was found for script "$2". Continue?"
 		case "$answer" in
 			yes) remove_script "$2" || error "Something went wrong while deleting the script folder from the local database" ;;
 			no) exit 0 ;;
 			*) die Unknown answer ;;
 		esac
+		else
+			remove_script "$2"
+		fi
 	success "Script removed"
 ;;
 restore)
