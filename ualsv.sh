@@ -26,6 +26,23 @@ install_pkgs() {
 install_aurs() {
 	yay -S ${aur[@]} || die Failed to install packages from AUR using yay
 }
+trapcom() {
+	error "Process termination signal received"
+	case "$__first_arg" in
+		install|get*)
+			rm -rf "$DIR"/local/"$__second_arg"/getdir
+			[ "$restore" == true ] && restore
+			[ "$restore_cleanup" == true ] && restore_cleanup
+			;;
+		list*|search|info)
+			rm -f "$DIR"/.temp*
+			;;
+		restore*)
+			:
+			;;
+	esac
+}
+trap trapcom SIGTERM SIGKILL SIGINT
 get_files() {
 	getdir="$CURDIR/getdir"
 	[ -d "$getdir" ] || mkdir "$getdir"
@@ -138,6 +155,8 @@ save_backup() {
 remove_script() {
 	rm -rf $DIR/local/"$1" || return 1
 }
+__first_arg="$1"
+__second_arg="$2"
 case "$1" in
 help)
 	cat <<EOF
