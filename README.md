@@ -62,3 +62,6 @@ If you want to list all the commands that the second `checkutils.sh` script prov
 `pacman` \
 `sudo` \
 `yay (AUR)`
+
+## Function scheme from file `checkutils.sh`
+

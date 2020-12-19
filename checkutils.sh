@@ -21,7 +21,7 @@ isde() {
 	fi
 }
 isee() {
-	[ "$2" ] && __redirect() { cat &>/dev/null; } || __redirect() { cat -; }
+	[ "$3" ] && __redirect() { cat &>/dev/null; } || __redirect() { cat -; }
 	if [ ! $1 "$2" ]; then
 		warning "$1" does not exists | __redirect; $__unset
 		return 1
