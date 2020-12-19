@@ -127,16 +127,16 @@ list_scripts_local() {
     rm $DIR/.temp_list*
 }
 after_pkg() {
-[ -s ../packages ] || return 0
+[ ! -s ../packages ] || return 0
 [ "$1" ] && place="$1" || place=".."
 free_pkgs="$(pacman -Qdtq)"
-while read -r pkg; do
+while read -u 3 -r pkg; do
 	if [ "$(grep -x "$pkg" <<< "${free_pkgs}")" ]; then
 		sudo pacman -Rs $pkg
 	else
 		process "$pkg skipped"
 	fi
-done < $place/packages
+done 3< $place/packages
 }
 restore_backup() {
 	isroot "(restore backup files)"
@@ -264,6 +264,9 @@ get|install|get-again)
 						exit 0
 						}
 	fi
+	if [ "$packages" ]; then
+		__cleaned_pkgs="$(grep -v -x -f <(pacman -Qsq) <(echo "${packages[@]}" | tr " " "\n"))"
+	fi
 	[ "$packages" ] && { out "Started downloading required packages using pacman"; install_pkgs || die "Something went wrong while receiving"; }
 	[ "$aur" ] && { out "Started downloading required packages using yay (AUR)"; install_aurs || die "Something went wrong while receiving"; }
 	success "Step 1 - done"
@@ -295,10 +298,7 @@ get|install|get-again)
 	[ "$do_cleanup" == true ] && { process "Executing cleanup"; cleanup; }
 	success "Step 3 - done"
 	touch "$DIR"/local/"$2"/installed
-	if [ "$packages" ]; then
-		__cleaned_pkgs="$(grep -v -x -f <(pacman -Qsq) <(echo "${packages[@]}" | tr " " "\n"))"
-		echo "$__cleaned_pkgs" > "$DIR"/local/"$2"/packages
-	fi
+	[ "$__cleaned_pkgs" ] && echo "$__cleaned_pkgs" > "$DIR"/local/"$2"/packages
 	success "$2 successfully applied!"
 	exit 0
 ;;
