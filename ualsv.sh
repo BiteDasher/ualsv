@@ -68,15 +68,15 @@ get_files() {
 	done
 }
 update_scripts() {
-	cd $DIR/database
+	cd "$DIR"/database
 	git pull --ff-only || die Failed to git pull scripts
 }
 list_scripts() {
 	# If SIGKILL was made and the process did not manage 
 	# to delete all temporary files, we will try to delete them again,
 	# if they are, of course.
-	rm -f $DIR/.temp_list*; touch $DIR/.temp_list_{name,version,creator,status}
-	for script in $DIR/database/*; do
+	rm -f "$DIR"/.temp_list*; touch "$DIR"/.temp_list_{name,version,creator,status}
+	for script in "$DIR"/database/*; do
 		local name="$(basename "$script")"
 		local version="$(grep -o "^version=.*" "$script"/script | cut -d "=" -f 2- | tr -d '"')"
 		local creator="$(grep -o "^creator=.*" "$script"/script | cut -d "=" -f 2- | tr -d '"')"
@@ -117,18 +117,19 @@ list_scripts_local() {
 				# locally installed scripts, we skip the not installed patch
 				[ "$1" != q ] && continue || local status="[.]"
 			fi
-		echo "$name" >> $DIR/.temp_list_name
-		echo "$version" >> $DIR/.temp_list_version
-		echo "$creator" >> $DIR/.temp_list_creator
-		echo "$status" >> $DIR/.temp_list_status
+		echo "$name" >> "$DIR"/.temp_list_name
+		echo "$version" >> "$DIR"/.temp_list_version
+		echo "$creator" >> "$DIR"/.temp_list_creator
+		echo "$status" >> "$DIR"/.temp_list_status
 	done
 	# Like awk, but a little easier
-    paste $DIR/.temp_list_status $DIR/.temp_list_name $DIR/.temp_list_version $DIR/.temp_list_creator | column -tc 4
-    rm $DIR/.temp_list*
+    paste "$DIR"/.temp_list_status "$DIR"/.temp_list_name "$DIR"/.temp_list_version "$DIR"/.temp_list_creator | column -tc 4
+    rm "$DIR"/.temp_list*
 }
 after_pkg() {
-[ "$1" ] && place="$1" || place=".."
-[ ! -s $place/packages ] || return 0
+[ "$1" ] && local place="$1" || local place=".."
+[ -f "$place"/packages ] || return 0
+[ -s "$place"/packages ] || return 0
 free_pkgs="$(pacman -Qdtq)"
 while read -u 3 -r pkg; do
 	if [ "$(grep -x "$pkg" <<< "${free_pkgs}")" ]; then
@@ -136,7 +137,7 @@ while read -u 3 -r pkg; do
 	else
 		process "$pkg skipped"
 	fi
-done 3< $place/packages
+done 3< "$place"/packages
 }
 restore_backup() {
 	isroot "(restore backup files)"
@@ -152,9 +153,9 @@ restore_backup() {
 		chown -R 0:0 ./backup_place
 		
 	else
-		exit 1
+		[ "$restored" == 1 ] && return 0 || exit 1
 	fi
-	cd $DIR/local/$ARG/backup_place
+	cd "$DIR"/local/"$ARG"/backup_place
 	if [ -f ../packages ]; then
 	out "Removing unnecessary packages"
 	after_pkg
@@ -172,7 +173,7 @@ restore_backup() {
 	chown -R $o_user:$o_group "$DIR"/local/"$ARG"/backup_place
 }
 save_backup() {
-	cd $DIR/local/$ARG/backup_place
+	cd "$DIR"/local/"$ARG"/backup_place
 	while read -r restore_file; do
 		local type="$(stat -c %f "$restore_file")"
 		local mode="$(stat -c %a "$restore_file")"
@@ -186,7 +187,7 @@ save_backup() {
 	success Done
 }
 remove_script() {
-	rm -rf $DIR/local/"$1" || return 1
+	rm -rf "$DIR"/local/"$1" || return 1
 }
 # We add arguments, since trapcom must somehow get the
 # current arguments from the running shell, instead of its own (in the function)
@@ -241,7 +242,7 @@ get|install|get-again)
 				*) die Unknown answer ;;
 			esac
 		fi
-	cp -a -r "$DIR"/database/"$2" $DIR/local/
+	cp -a -r "$DIR"/database/"$2" "$DIR"/local/
 	fi ####
 	cd "$DIR"/local/"$2"
 	if [ -f ./backup ] && [ ! -f "$DIR"/local/"$2"/installed ]; then
@@ -309,20 +310,20 @@ info)
 	for function_ in ${functions[@]}; do
 		declare -f $function_ &>/dev/null && found_functions+=("$function_")
 	done
-	rm -f $DIR/.temp_list*; touch $DIR/.temp_list_{1,2}
-	echo "Name:" >> $DIR/.temp_list_1; echo "$(basename $2)" >> $DIR/.temp_list_2
-	echo "Description:" >> $DIR/.temp_list_1; echo "$desc" >> $DIR/.temp_list_2
-	echo "Version:" >> $DIR/.temp_list_1; echo "$version" >> $DIR/.temp_list_2
-	echo "Creator:" >> $DIR/.temp_list_1; echo "$creator" >> $DIR/.temp_list_2
-	[ "$packages" ] && { echo "Required official packages:" >> $DIR/.temp_list_1; echo "${packages[@]}" >> $DIR/.temp_list_2 ; }
-	[ "$aur" ] && { echo "Required AUR packages:" >> $DIR/.temp_list_1; echo "${aur[@]}" >> $DIR/.temp_list_2 ; }
-	[ "$get" ] && { echo "Links of files to be downloaded during the process:" >> $DIR/.temp_list_1; echo "$(echo ${get[@]} | cut -d ":" -f 3- | tr " " ";")" >> $DIR/.temp_list_2 ; }
-	echo "Found functions:" >> $DIR/.temp_list_1; echo "${found_functions[@]}" >> $DIR/.temp_list_2
+	rm -f "$DIR"/.temp_list*; touch "$DIR"/.temp_list_{1,2}
+	echo "Name:" >> "$DIR"/.temp_list_1; echo "$(basename $2)" >> "$DIR"/.temp_list_2
+	echo "Description:" >> "$DIR"/.temp_list_1; echo "$desc" >> "$DIR"/.temp_list_2
+	echo "Version:" >> "$DIR"/.temp_list_1; echo "$version" >> "$DIR"/.temp_list_2
+	echo "Creator:" >> "$DIR"/.temp_list_1; echo "$creator" >> "$DIR"/.temp_list_2
+	[ "$packages" ] && { echo "Required official packages:" >> "$DIR"/.temp_list_1; echo "${packages[@]}" >> "$DIR"/.temp_list_2 ; }
+	[ "$aur" ] && { echo "Required AUR packages:" >> "$DIR"/.temp_list_1; echo "${aur[@]}" >> "$DIR"/.temp_list_2 ; }
+	[ "$get" ] && { echo "Links of files to be downloaded during the process:" >> "$DIR"/.temp_list_1; echo "$(echo ${get[@]} | cut -d ":" -f 3- | tr " " ";")" >> $DIR/.temp_list_2 ; }
+	echo "Found functions:" >> "$DIR"/.temp_list_1; echo "${found_functions[@]}" >> "$DIR"/.temp_list_2
 	awk 'FNR==1{f+=1;w++;}
      f==1{if(length>w) w=length; next;}
      f==2{printf("%-"w"s",$0); getline<f2; print;}
-    ' f2=$DIR/.temp_list_2 $DIR/.temp_list_1 $DIR/.temp_list_1
-	rm -f $DIR/.temp_list*
+    ' f2="$DIR"/.temp_list_2 "$DIR"/.temp_list_1 "$DIR"/.temp_list_1
+	rm -f "$DIR"/.temp_list*
 ;;
 search)
 	[ "$2" ] || die Enter your search query
@@ -349,14 +350,14 @@ restore)
 	[ "$2" ] || die Enter the name of the script you want to remove
 	[ -d "$DIR"/local/"$2" ] || die "No script found with name $2"
 	[ -f "$DIR"/local/"$2"/installed ] || die "This patch is not applied"
-	if source <(source "$DIR"/local/"$2"/script) && declare -f restore &>/dev/null; then
-		source "$DIR"/local/"$2"/script
-		restore || error "Failed to restore"
+	source "$DIR"/local/"$2"/script
+	if declare -f restore &>/dev/null; then
+		restore && restored=1 || error "Failed to restore"
 		declare -f restore_cleanup &>/dev/null && restore_cleanup
 	fi
-	[ -d "$DIR"/local/"$2"/backup_place ] || die "No backup folder found with name $2"
+	[ -d "$DIR"/local/"$2"/backup_place ] || { [ "$restored" == 1 ] || die "No backup folder found with name $2"; }
 	ARG="$2" restore_backup || die "Failed to restore backup"
-	rm $DIR/local/"$2"/installed
+	rm "$DIR"/local/"$2"/installed
 	success "Done!"
 ;;
 update)

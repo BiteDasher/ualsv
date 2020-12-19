@@ -49,23 +49,23 @@ user_read() {
 	fi
 }
 out() {
-	echo "===> "$@""
+	echo "===> $*"
 }
 die() {
-	echo -e "\e[0;31m===>\e[0m ERROR: "$@""
+	echo -e "\e[0;31m===>\e[0m ERROR: $*"
 	[ "$1" ] && exit 1
 }
 warning() {
-	echo -e "\e[0;33m===>\e[0m WARNING "$@""
+	echo -e "\e[0;33m===>\e[0m WARNING $*"
 }
 error() {
-	echo -e "\e[0;31m===>\e[0m ERROR: "$@""
+	echo -e "\e[0;31m===>\e[0m ERROR: $*"
 }
 success() {
-	echo -e "\e[0;32m--->\e[0m "$@""
+	echo -e "\e[0;32m--->\e[0m $*"
 }
 process() {
-	echo -e "\t>>> "$@"..."
+	echo -e "\t>>> $*..."
 }
 sendnull() {
 	$@ &>/dev/null
