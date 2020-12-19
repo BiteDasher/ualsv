@@ -153,7 +153,7 @@ restore_backup() {
 		chown -R 0:0 ./backup_place
 		
 	else
-		[ "$restored" == 1 ] && return 0 || exit 1
+		[ "$restored" == 1 ] && return 0 || return 1
 	fi
 	cd "$DIR"/local/"$ARG"/backup_place
 	if [ -f ../packages ]; then
