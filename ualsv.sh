@@ -43,6 +43,7 @@ trapcom() {
 	esac
 }
 trap trapcom SIGTERM SIGKILL SIGINT
+# Function for downloading files from array "get" #
 get_files() {
 	getdir="$CURDIR/getdir"
 	[ -d "$getdir" ] || mkdir "$getdir"
@@ -50,9 +51,13 @@ get_files() {
 	local source_get_mtd="$(echo $get_ | cut -d ":" -f 1)"
 	local place="$(echo $get_ | cut -d ":" -f 2)"
 	local address="$(echo $_get | cut -d ":" -f 3-)"
+	# If instead of the destination file we have empty, or "-",
+	# we use as the name everything that is after the last slash in the "address" column
 	if [ "$place" == "-" ] || [ -z "$place" ]; then
 		local place="${address##*/}"
 	fi
+	# If the file exists, do not download it again,
+	# but if it is a git repository, delete the folder and clone it again
 	[[ -e "$place" ]] && [[ "$source_get_mtd" -ne "git" ]] && continue
 	[[ -e "$place" ]] && [[ "$source_get_mtd" -eq "git" ]] && rm -rf "$place"
 	case "${source_get_mtd}" in
@@ -67,6 +72,9 @@ update_scripts() {
 	git pull --ff-only || die Failed to git pull scripts
 }
 list_scripts() {
+	# If SIGKILL was made and the process did not manage 
+	# to delete all temporary files, we will try to delete them again,
+	# if they are, of course.
 	rm -f $DIR/.temp_list*; touch $DIR/.temp_list_{name,version,creator,status}
 	for script in $DIR/database/*; do
 		local name="$(basename "$script")"
@@ -82,6 +90,7 @@ list_scripts() {
 		echo "$creator" >> $DIR/.temp_list_creator
 		echo "$status" >> $DIR/.temp_list_status
 	done
+	# Making beautiful column-like output #
 	awk 'BEGIN{ for(i=1; i<ARGC; i++) { 
               while( (getline<ARGV[i])>0) { 
                  nl[i]++; if(length>w[i]) w[i]=length; }
@@ -104,6 +113,8 @@ list_scripts_local() {
 			if [ -f "$DIR/local/$name/installed" ]; then
 				local status="[X]"
 			else
+				# If we decide to use list-local-s to show only 
+				# locally installed scripts, we skip the not installed patch
 				[ "$1" != q ] && continue || local status="[.]"
 			fi
 		echo "$name" >> $DIR/.temp_list_name
@@ -111,12 +122,17 @@ list_scripts_local() {
 		echo "$creator" >> $DIR/.temp_list_creator
 		echo "$status" >> $DIR/.temp_list_status
 	done
+	# Like awk, but a little easier
     paste $DIR/.temp_list_status $DIR/.temp_list_name $DIR/.temp_list_version $DIR/.temp_list_creator | column -tc 4
     rm $DIR/.temp_list*
 }
 restore_backup() {
 	isroot "(restore backup files)"
 	### Better safe than sorry
+	# If in some situation during this process the folder with the
+	# script is deleted and the chown command is executed, it may
+	# change the permissions on those files that it should not touch.
+	# To isolate ourselves from this, let's check again
 	if [ -d "$DIR"/local/"$ARG"/backup_place ]; then
 		cd "$DIR"/local/"$ARG"
 		o_user="$(stat -c %u ./backup_place)"
@@ -146,6 +162,7 @@ save_backup() {
 		local mode="$(stat -c %a "$restore_file")"
 		case $type in
 			41ed) install -d -m $mode ".$restore_file" || error "$restore_file" ;;
+			# If we come across a symbolic link, we will make a folder for it in advance
 			a1ff) install -d "$(dirname ".$restore_file")"; ln -s "$(readlink "$restore_file")" ".$restore_file" || error "$restore_file" ;;
 			81a4) install -D -m $mode "$restore_file" ".$restore_file" || error "$restore_file" ;;
 		esac
@@ -155,6 +172,8 @@ save_backup() {
 remove_script() {
 	rm -rf $DIR/local/"$1" || return 1
 }
+# We add arguments, since trapcom must somehow get the
+# current arguments from the running shell, instead of its own (in the function)
 __first_arg="$1"
 __second_arg="$2"
 case "$1" in
@@ -215,6 +234,8 @@ get|install|get-again)
 		ARG="$2" save_backup
 		BACKUP=1
 	fi
+	# If the backup was not made, there was no move to the folder with it.
+	# Let's check if we are in the correct catalog now
 	[ ! -f ./script ] && cd ..
 	source ./script
 	CURDIR="$(pwd)"
