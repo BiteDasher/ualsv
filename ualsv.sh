@@ -85,10 +85,10 @@ list_scripts() {
 			else
 				local status="[.]"
 			fi
-		echo "$name" >> $DIR/.temp_list_name
-		echo "$version" >> $DIR/.temp_list_version
-		echo "$creator" >> $DIR/.temp_list_creator
-		echo "$status" >> $DIR/.temp_list_status
+		echo "$name" >> "$DIR"/.temp_list_name
+		echo "$version" >> "$DIR"/.temp_list_version
+		echo "$creator" >> "$DIR"/.temp_list_creator
+		echo "$status" >> "$DIR"/.temp_list_status
 	done
 	# Making beautiful column-like output #
 	awk 'BEGIN{ for(i=1; i<ARGC; i++) { 
@@ -101,12 +101,12 @@ list_scripts() {
                 if(r<=nl[f]) getline<ARGV[f]; else $0=""  
                 printf("%-"w[f]"s",$0); } 
               print "" } }
-    ' $DIR/.temp_list_status $DIR/.temp_list_name $DIR/.temp_list_version $DIR/.temp_list_creator
-    rm $DIR/.temp_list*
+    ' "$DIR"/.temp_list_status "$DIR"/.temp_list_name "$DIR"/.temp_list_version "$DIR"/.temp_list_creator
+    rm "$DIR"/.temp_list*
 }
 list_scripts_local() {
-	rm -f $DIR/.temp_list*; touch $DIR/.temp_list_{name,version,creator,status}
-	for script in $DIR/local/*; do
+	rm -f "$DIR"/.temp_list*; touch "$DIR"/.temp_list_{name,version,creator,status}
+	for script in "$DIR"/local/*; do
 		local name="$(basename "$script")"
 		local version="$(grep -o "^version=.*" "$script"/script | cut -d "=" -f 2- | tr -d '"')"
 		local creator="$(grep -o "^creator=.*" "$script"/script | cut -d "=" -f 2- | tr -d '"')"
@@ -161,7 +161,7 @@ restore_backup() {
 	after_pkg
 	fi
 	while read -r restore_file; do
-		[[ -e ".$restore_file" ]] || { error "$restore_file not found, skipping"; continue; }
+		[[ -e ".$restore_file" ]] continue
 		local mode="$(stat -c %a ".$restore_file")"
 		local type="$(stat -c %f ".$restore_file")"
 		case $type in
