@@ -9,7 +9,7 @@ if [ -f $DIR ]; then
 	mkdir -p $DIR
 	mkdir -p $DIR/local
 	cd $DIR
-	git clone "$SERVER"
+	git clone "$SERVER" database
 fi
 user="$(whoami)"
 isroot() {
