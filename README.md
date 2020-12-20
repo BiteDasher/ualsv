@@ -44,6 +44,7 @@ rm -r /tmp/trashcan
 /etc/backup.folder
 /etc/backup.symlink
 ```
+**You can also look at the `example` folder, which contains a script to turn off tearing on Intel embedded**
 
 ## Recommendations:
 The `check` function is executed BEFORE installing packages from the `$packages` and `$aur` arrays. \
