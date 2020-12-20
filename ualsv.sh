@@ -332,7 +332,7 @@ search)
 	for search in "$DIR"/database/*; do
 		name="$(basename $search)"
 		eval $(source "$search"/script; echo "desc=\"$desc\""; echo "version=\"$version\"")
-		total+=("~$name $version% $desc")
+		total+=("~[ $name ] $version% $desc")
 	done
 	echo ${total[@]} | tr "~" "\n" | grep -i "${@:2}" | sed "s/%/\n  /1"
 ;;
