@@ -146,7 +146,7 @@ ibline() {
 }
 ibetween() {
 	[ "$5" ] && local redirect="sudo" || local redirect=""
-	sed -e "/$1/,/$2/c\\$1\n$3\n$2" -i "$4"
+	$redirect sed -e "/$1/,/$2/c\\$1\n$3\n$2" -i "$4"
 }
 ispe() {
 	[ "$2" ] && __redirect() { cat &>/dev/null; } || __redirect() { cat -; }
