@@ -117,6 +117,21 @@ If you want to list all the commands that the second `checkutils.sh` script prov
 
 `cat_redirect_a` : like `cat_redirect`, but `tee -a`
 
+`dline` : `sed "/$1/d" -i "$2"` \
+`     ` | Add. arguments : `($3):sudo` - executes as sudo
+
+`dlinex` : `sed "/^$1\$/d" -i "$2" \
+`      ` | Add. arguments : `($3):sudo` - executes as sudo
+
+`ialine` : `sed "/$1/a $2" -i "$3" \
+`      ` | Add. arguments : `($4):sudo` - executes as sudo
+
+`ibline` : `sed "/$1/i $2" -i "$3" \
+`      ` | Add. arguments : `($4):sudo` - executes as sudo
+
+`ibetween` : `sed -e "/$1/,/$2/c\\$1\n$3\n$2" -i "$4"` \
+`        ` | Add. arguments : `($5):sudo` - executes as sudo
+
 `ispe` : Checks if package `$1` is installed locally \
 `    ` | Add. arguments: `($2):null` - redirect warning to /dec/null
 

@@ -128,6 +128,26 @@ cat_redirect_a() {
 	[ "$2" ] && local redirect="sudo" || local redirect=""
 	$redirect tee -a "$1" 1>/dev/null
 }
+dlinex() {
+	[ "$3" ] && local redirect="sudo" || local redirect=""
+	$redirect sed "/^$1\$/d" -i "$2"
+}
+dline() {
+	[ "$3" ] && local redirect="sudo" || local redirect=""
+	$redirect sed "/$1/d" -i "$2"
+}
+ialine() {
+	[ "$4" ] && local redirect="sudo" || local redirect=""
+	$redirect sed "/$1/a $2" -i "$3"
+}
+ibline() {
+	[ "$4" ] && local redirect="sudo" || local redirect=""
+	$redirect sed "/$1/i $2" -i "$3"
+}
+ibetween() {
+	[ "$5" ] && local redirect="sudo" || local redirect=""
+	sed -e "/$1/,/$2/c\\$1\n$3\n$2" -i "$4"
+}
 ispe() {
 	[ "$2" ] && __redirect() { cat &>/dev/null; } || __redirect() { cat -; }
 	if pacman -Qsq | grep -x "$1" &>/dev/null; then
