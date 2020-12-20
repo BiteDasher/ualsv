@@ -8,8 +8,11 @@ This is `ualsv`. a script that can apply patches to files, or restore them to th
 Execute `./ualsv.sh help` for more information \
 Do not forget execute `install -Dm755 checkutils.sh /usr/local/bin/checkutils.sh`
 
+## Updates
+The [ualsv_db](https://github.com/BiteDasher/ualsv_db.git) repository is available, from which all packages will now be downloaded. If you would like to post your patch, please send me a Merge Request
+
 ## How/where to download scripts for this thing? How do I write my own?
-I'm still thinking about where I should store and whether I should store the script files for this program at all. But as soon as I do, I will definitely report it here. And at the expense of writing your script, I will now show you one of the examples:
+~~I'm still thinking about where I should store and whether I should store the script files for this program at all. But as soon as I do, I will definitely report it here.~~  And at the expense of writing your script, I will now show you one of the examples:
 ```
 test --- script
     \___ backup

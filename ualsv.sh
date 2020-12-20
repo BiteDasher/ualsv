@@ -4,11 +4,11 @@
 LIB="/usr/local/share/ualsv"
 source $LIB/checkutils.sh
 DIR="$HOME/.ualsv"
-SERVER=" " ### Enter the address of your script repository here
-if [ ! -d $DIR ]; then
-	mkdir -p $DIR
-	mkdir -p $DIR/local
-	cd $DIR
+SERVER="https://github.com/BiteDasher/ualsv_db.git" ### Enter the address of your script repository here
+if [ ! -d "$DIR" ]; then
+	mkdir -p "$DIR"
+	mkdir -p "$DIR"/local
+	cd "$DIR"
 	git clone "$SERVER" database
 fi
 user="$(whoami)"
