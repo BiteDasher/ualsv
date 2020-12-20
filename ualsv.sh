@@ -161,7 +161,7 @@ restore_backup() {
 	after_pkg
 	fi
 	while read -r restore_file; do
-		[[ -e ".$restore_file" ]] continue
+		[[ -e ".$restore_file" ]] && continue
 		local mode="$(stat -c %a ".$restore_file")"
 		local type="$(stat -c %f ".$restore_file")"
 		case $type in
