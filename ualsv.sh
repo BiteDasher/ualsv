@@ -176,7 +176,7 @@ restore_backup() {
 save_backup() {
 	cd "$DIR"/local/"$ARG"/backup_place
 	while read -r restore_file; do
-		[[ -e "$restore_file" ]] || { warning "Skipping $restore_file since it doesn't exists"; continue; }
+		[[ -e "$restore_file" ]] || { smallw "Skipping $restore_file since it doesn't exists"; continue; }
 		local type="$(stat -c %f "$restore_file")"
 		local mode="$(stat -c %a "$restore_file")"
 		case $type in

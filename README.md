@@ -79,17 +79,23 @@ If you want to list all the commands that the second `checkutils.sh` script prov
 `user_read` : Reads user variable `$1` with prompt `${@:2}` \
 `         ` | Add. arguments : Run with variable `$YN=Y(or)N` to ask a question and give the user an answer
 
-`out` : echo ===> $@
+`out` : echo ===> $\*
 
 `die` : echo (die function) and exit 1
 
-`warning` : echo yellow ===> and WARNING: $@
+`warning` : echo yellow ===> and WARNING: $\*
 
-`error` : echo red ===> and ERROR: $@
+`smallw` : echo yellow -> and $\*
 
-`success` : echo green ---> and $@
+`msg` : echo bold cyan >>> and $\*
 
-`process` : echo \t(tab) and $@
+`msg2` : echo -> and $\*
+
+`error` : echo red ===> and ERROR: $\*
+
+`success` : echo green ---> and $\*
+
+`process` : echo \t(tab) and $\*
 
 `sendnull` : Execute command with redirection &\>/dev/null
 

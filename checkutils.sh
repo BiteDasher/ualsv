@@ -55,8 +55,17 @@ die() {
 	echo -e "\e[0;31m===>\e[0m ERROR: $*"
 	[ "$1" ] && exit 1
 }
+smallw() {
+	echo -e "\e[0;33m  ->\e[0m $*"
+}
+msg() {
+	echo -e "\e[1;36m >>>\e[0m $*"
+}
+msg2() {
+	echo -e "  -> $*"
+}
 warning() {
-	echo -e "\e[0;33m===>\e[0m WARNING $*"
+	echo -e "\e[0;33m===>\e[0m WARNING: $*"
 }
 error() {
 	echo -e "\e[0;31m===>\e[0m ERROR: $*"
