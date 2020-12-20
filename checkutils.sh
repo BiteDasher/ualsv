@@ -148,6 +148,10 @@ ibetween() {
 	[ "$5" ] && local redirect="sudo" || local redirect=""
 	$redirect sed -e "/$1/,/$2/c\\$1\n$3\n$2" -i "$4"
 }
+cline() {
+	[ "$5" ] && local redirect="sudo" || local redirect=""
+	$redirect sed -e "/$1/ s/$2/$3/" -i "$4"	
+}
 ispe() {
 	[ "$2" ] && __redirect() { cat &>/dev/null; } || __redirect() { cat -; }
 	if pacman -Qsq | grep -x "$1" &>/dev/null; then

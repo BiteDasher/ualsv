@@ -132,8 +132,11 @@ If you want to list all the commands that the second `checkutils.sh` script prov
 `ibetween` : `sed -e "/$1/,/$2/c\\$1\n$3\n$2" -i "$4"` \
 `        ` | Add. arguments : `($5):sudo` - executes as sudo
 
+`cline` : `sed -e "/$1/ s/$2/$3/" -i "$4"` \
+`     ` | Add. arguments : `($5):sudo` - executes as sudo
+
 `ispe` : Checks if package `$1` is installed locally \
-`    ` | Add. arguments: `($2):null` - redirect warning to /dec/null
+`    ` | Add. arguments: `($2):null` - redirect warning to /dev/null
 
 `instpkg` : Installs packages `$@`
 
