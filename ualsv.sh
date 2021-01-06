@@ -395,6 +395,6 @@ force-remove)
 	rm -rf "$DIR"
 ;;
 *)
-	die "Unknown argument. Use $0 help for more."
+	die "Unknown argument. Use $(basename $0) help for more."
 ;;
 esac
