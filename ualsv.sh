@@ -5,7 +5,7 @@ LIB="/usr/local/share/ualsv"
 source $LIB/checkutils.sh
 DIR="$HOME/.ualsv"
 SERVER="https://github.com/BiteDasher/ualsv_db.git" ### Enter the address of your script repository here
-if [ ! -d "$DIR" ]; then
+[ "$1" != "--pacman" ] && if [ ! -d "$DIR" ]; then
 	mkdir -p "$DIR"
 	mkdir -p "$DIR"/local
 	cd "$DIR"
@@ -393,6 +393,21 @@ force-remove)
 	read -p "Are you sure? (Click Enter) 3/3"
 	sleep 5
 	rm -rf "$DIR"
+;;
+--pacman)
+	case "$2" in
+		init)
+		if [ ! -d "$DIR" ]; then
+		mkdir -p "$DIR"
+		mkdir -p "$DIR"/local
+		cd "$DIR"
+		git clone "$SERVER" database
+		fi
+		;;
+		hook)
+		update_scripts
+		;;
+	esac
 ;;
 *)
 	die "Unknown argument. Use $(basename $0) help for more."
