@@ -207,7 +207,7 @@ usage: ualsv [options] script
 	info		- Shows detailed information about the specified script
 	search		- Searches for possible scripts using name and description
 	get		- Download script and patch what is needed
-	 install	- Same as get
+	install		- Same as get
 	get-again	- Try to install a patch from a script that was installed locally, but not applied
 	remove		- Removes the script from the local database and all its data
 	restore		- Restores everything that the script touched during its work, as well as the installed status in the system
