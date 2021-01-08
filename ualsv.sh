@@ -78,8 +78,8 @@ list_scripts() {
 	rm -f "$DIR"/.temp_list*; touch "$DIR"/.temp_list_{name,version,creator,status}
 	for script in "$DIR"/database/*; do
 		local name="$(basename "$script")"
-		local version="$(grep -o "^version=.*" "$script"/script | cut -d "=" -f 2- | tr -d '"')"
-		local creator="$(grep -o "^creator=.*" "$script"/script | cut -d "=" -f 2- | tr -d '"')"
+		local version="$(grep -o "^version=.*" "$script"/script | cut -d "=" -f 2- | tr -d \'\")"
+		local creator="$(grep -o "^creator=.*" "$script"/script | cut -d "=" -f 2- | tr -d \'\")"
 			if [ -f "$DIR/local/$name/installed" ]; then
 				local status="[X]"
 			else
@@ -108,8 +108,8 @@ list_scripts_local() {
 	rm -f "$DIR"/.temp_list*; touch "$DIR"/.temp_list_{name,version,creator,status}
 	for script in "$DIR"/local/*; do
 		local name="$(basename "$script")"
-		local version="$(grep -o "^version=.*" "$script"/script | cut -d "=" -f 2- | tr -d '"')"
-		local creator="$(grep -o "^creator=.*" "$script"/script | cut -d "=" -f 2- | tr -d '"')"
+		local version="$(grep -o "^version=.*" "$script"/script | cut -d "=" -f 2- | tr -d \'\")"
+		local creator="$(grep -o "^creator=.*" "$script"/script | cut -d "=" -f 2- | tr -d \'\")"
 			if [ -f "$DIR/local/$name/installed" ]; then
 				local status="[X]"
 			else
