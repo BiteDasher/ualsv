@@ -6,7 +6,7 @@ This is `ualsv`. a script that can apply patches to files, or restore them to th
 
 ## How to use it?
 Execute `./ualsv.sh help` for more information \
-Do not forget execute `install -Dm755 checkutils.sh /usr/local/bin/checkutils.sh`
+Do not forget execute `install -Dm755 checkutils.sh /usr/local/share/ualsv/checkutils.sh`
 
 ## Updates
 The [ualsv_db](https://github.com/BiteDasher/ualsv_db.git) repository is available, from which all packages will now be downloaded. If you would like to post your patch, please send me a Merge Request
