@@ -58,8 +58,7 @@ get_files() {
 	fi
 	# If the file exists, do not download it again,
 	# but if it is a git repository, delete the folder and clone it again
-	[[ -e "$place" ]] && [[ "$source_get_mtd" -ne "git" ]] && continue
-	[[ -e "$place" ]] && [[ "$source_get_mtd" -eq "git" ]] && rm -rf "$place"
+	[[ -e "$getdir"/"$place" ]] && [[ "$source_get_mtd" == "git" ]] && rm -rf "$getdir"/"$place" || continue
 	case "${source_get_mtd}" in
 		wget) wget -O "$getdir"/"$place" "$address" -q --show-progress;;
 		curl) curl -L -o "$getdir"/"$place" --progress-bar "$address";;
