@@ -319,7 +319,7 @@ info)
 	echo "Creator:" >> "$DIR"/.temp_list_1; echo "$creator" >> "$DIR"/.temp_list_2
 	[ "$packages" ] && { echo "Required official packages:" >> "$DIR"/.temp_list_1; echo "${packages[@]}" >> "$DIR"/.temp_list_2 ; }
 	[ "$aur" ] && { echo "Required AUR packages:" >> "$DIR"/.temp_list_1; echo "${aur[@]}" >> "$DIR"/.temp_list_2 ; }
-	[ "$get" ] && { echo "Links of files to be downloaded during the process:" >> "$DIR"/.temp_list_1; echo "$(for gets in ${get[@]}; do echo "$gets" | cut -d ":" -f 3-)" | tr "\n" ";" >> $DIR/.temp_list_2 ; }
+	[ "$get" ] && { echo "Links of files to be downloaded during the process:" >> "$DIR"/.temp_list_1; echo "$(for gets in ${get[@]}; do echo "$gets" | cut -d ":" -f 3-; done)" | tr "\n" ";" >> $DIR/.temp_list_2 ; }
 	echo "Found functions:" >> "$DIR"/.temp_list_1; echo "${found_functions[@]}" >> "$DIR"/.temp_list_2
 	awk 'FNR==1{f+=1;w++;}
      f==1{if(length>w) w=length; next;}
