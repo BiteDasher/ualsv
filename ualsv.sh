@@ -24,7 +24,7 @@ install_pkgs() {
 	sudo pacman -S ${packages[@]} --asdeps --needed || die Failed to install packages
 }
 install_aurs() {
-	yay -S ${aur[@]} || die Failed to install packages from AUR using yay
+	yay -S ${aur[@]} --asdeps || die Failed to install packages from AUR using yay
 }
 trapcom() {
 	error "Process termination signal received"
@@ -58,7 +58,8 @@ get_files() {
 	fi
 	# If the file exists, do not download it again,
 	# but if it is a git repository, delete the folder and clone it again
-	[[ -e "$getdir"/"$place" ]] && [[ "$source_get_mtd" == "git" ]] && rm -rf "$getdir"/"$place" || continue
+	[[ -e "$getdir"/"$place" ]] && [[ "$source_get_mtd" == "git" ]] && rm -rf "$getdir"/"$place"
+	[[ -e "$getdir"/"$place" ]] && [[ "$source_get_mtd" != "git" ]] && continue
 	case "${source_get_mtd}" in
 		wget) wget -O "$getdir"/"$place" "$address" -q --show-progress;;
 		curl) curl -L -o "$getdir"/"$place" --progress-bar "$address";;
