@@ -165,9 +165,9 @@ restore_backup() {
 		local mode="$(stat -c %a ".$restore_file")"
 		local type="$(stat -c %f ".$restore_file")"
 		case $type in
-			a1ff) ln -s "$(readlink ".$restore_file")" "$restore_file" || error "$restore_file" ;;
-			81a4) install -D -m $mode ".$restore_file" "$restore_file" || error "$restore_file" ;;
-			41ed) install -d -m $mode "$restore_file" || error "$restore_file" ;;
+			a1*) ln -s "$(readlink ".$restore_file")" "$restore_file" || error "$restore_file" ;;
+			81*) install -D -m $mode ".$restore_file" "$restore_file" || error "$restore_file" ;;
+			41*) install -d -m $mode "$restore_file" || error "$restore_file" ;;
 		esac
 	done < ../backup || { chown -R $o_user:$o_group "$DIR"/local/"$ARG"/backup_place; die Something went wrong; }
 	success Done
@@ -180,10 +180,10 @@ save_backup() {
 		local type="$(stat -c %f "$restore_file")"
 		local mode="$(stat -c %a "$restore_file")"
 		case $type in
-			41ed) install -d -m $mode ".$restore_file" || error "$restore_file" ;;
+			41*) install -d -m $mode ".$restore_file" || error "$restore_file" ;;
 			# If we come across a symbolic link, we will make a folder for it in advance
-			a1ff) install -d "$(dirname ".$restore_file")"; ln -s "$(readlink "$restore_file")" ".$restore_file" || error "$restore_file" ;;
-			81a4) install -D -m $mode "$restore_file" ".$restore_file" || error "$restore_file" ;;
+			a1*) install -d "$(dirname ".$restore_file")"; ln -s "$(readlink "$restore_file")" ".$restore_file" || error "$restore_file" ;;
+			81*) install -D -m $mode "$restore_file" ".$restore_file" || error "$restore_file" ;;
 		esac
 	done < ../backup || die Something went wrong
 	success Done
