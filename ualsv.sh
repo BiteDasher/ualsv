@@ -1,16 +1,35 @@
 #!/bin/bash
-[ "$(id -u)" == 0 ] && HOME="/home/$SUDO_USER"
-### Useful Arch Linux Script Vault
 LIB="/usr/local/share/ualsv"
 source $LIB/checkutils.sh
+if [ "$(id -u)" == 0 ]; then
+	if [ -n "$U_HOME" ]; then
+		HOME="$U_HOME"
+	else
+		if [ -n "$SUDO_USER" ]; then
+			HOME="$(getent passwd $SUDO_USER | cut -d ":" -f 6)"
+		else
+			die "The script was run without sudo. Unable to get the real user's home directory. Run the script with the variable U_HOME=\"home/directory/location\""
+		fi
+	fi
+fi
+### Useful Arch Linux Script Vault
 DIR="$HOME/.ualsv"
 SERVER="https://github.com/BiteDasher/ualsv_db.git" ### Enter the address of your script repository here
+_chown="$(stat -c %u:%g $HOME)"
 [ "$1" != "--pacman" ] && if [ ! -d "$DIR" ]; then
 	mkdir -p "$DIR"
 	mkdir -p "$DIR"/local
 	cd "$DIR"
 	git clone "$SERVER" database
+	chown -R $_chown "$DIR"
 fi
+#####
+if [ "$(id -u):$(id -g)" == "$_chown" ]; then
+	_do_chown=0
+else
+	[ "$(id -u)" -eq 0 ] && _do_chown=1
+fi
+#####
 user="$(whoami)"
 isroot() {
 	if [[ $(id -u) -ne 0 ]]; then
@@ -70,6 +89,7 @@ get_files() {
 update_scripts() {
 	cd "$DIR"/database
 	git pull --ff-only || die Failed to git pull scripts
+	[ $_do_chown -eq 1 ] && chown -R $_chown ./
 }
 list_scripts() {
 	# If SIGKILL was made and the process did not manage 
@@ -302,6 +322,7 @@ get|install|get-again)
 	touch "$DIR"/local/"$2"/installed
 	[ "$__cleaned_pkgs" ] && echo "$__cleaned_pkgs" > "$DIR"/local/"$2"/packages
 	success "$2 successfully applied!"
+	[ $_do_chown -eq 1 ] && chown -R $_chown "$DIR"/local/"$2"
 	exit 0
 ;;
 info)
@@ -385,6 +406,7 @@ force-update)
 	rm -rf "$DIR"/database
 	cd "$DIR"
 	git clone "$SERVER" database || die "Failed to git clone"
+	[ $_do_chown -eq 1 ] && chown -R $_chown ./database
 	success "Done!"
 ;;
 force-remove)
@@ -402,6 +424,7 @@ force-remove)
 		mkdir -p "$DIR"/local
 		cd "$DIR"
 		git clone "$SERVER" database
+		chown -R $_chown "$DIR"
 		fi
 		;;
 		hook)
