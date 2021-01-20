@@ -187,12 +187,8 @@ restore_backup() {
 		[ "$restored" == 1 ] && return 0 || return 1
 	fi
 	cd "$DIR"/local/"$ARG"/backup_place
-	if [ -f ../packages ]; then
-	out "Removing unnecessary packages"
-	after_pkg
-	fi
 	while read -r restore_file; do
-		[[ -e ".$restore_file" ]] && continue
+		[[ ! -e "$restore_file" ]] && continue
 		local mode="$(stat -c %a ".$restore_file")"
 		local type="$(stat -c %f ".$restore_file")"
 		case $type in
@@ -217,7 +213,31 @@ save_backup() {
 			81*) install -D -m $mode "$restore_file" ".$restore_file" || error "$restore_file" ;;
 		esac
 	done < ../backup || die Something went wrong
-	success Done
+	success Backup done
+}
+apply_patches() {
+	cd "$DIR"/local/"$ARG"/patchset
+	_all_count="$(find . -mindepth 1 -not -path "./config" | wc -l)"
+	_count=0
+	while read -r patch; do
+		((_count++))
+		if [ "$(echo "$patch" | cut -c 1)" == "+" ]; then
+			p_name="$(echo "$patch" | cut -c 2- | cut -d ":" -f 1)"
+			sudopatch=sudo
+		else
+			p_name="$(echo "$patch" | cut -d ":" -f 1)"
+			sudopatch=
+		fi
+		p_dest="$(eval echo "$patch" | cut -d ":" -f 2-)"
+		process "[$_count/$_all_count] Applying $p_name"
+		if [ -e "$p_dest" ]; then
+			:
+		else
+			smallw "Skipping $p_name, because the file that is needed for the patch is not found"
+			continue
+		fi
+		$sudopatch patch --quiet -N -p 0 "$p_dest" ./"$p_name" || warning "Something went wrong while patching $p_dest"
+	done < ./config
 }
 remove_script() {
 	rm -rf "$DIR"/local/"$1" || return 1
@@ -235,10 +255,9 @@ usage: ualsv [options] script
 	list		- Display information about scripts, their status, version and author
 	list-local	- Shows all locally installed and applied scripts
 	list-local-s	- Shows scripts that are just in the local database
-	info		- Shows detailed information about the specified script
+	info/show	- Shows detailed information about the specified script
 	search		- Searches for possible scripts using name and description
-	get		- Download script and patch what is needed
-	install		- Same as get
+	install/get	- Download script and patch what is needed
 	get-again	- Try to install a patch from a script that was installed locally, but not applied
 	remove		- Removes the script from the local database and all its data
 	restore		- Restores everything that the script touched during its work, as well as the installed status in the system
@@ -319,6 +338,7 @@ get|install|get-again)
 	[ "$(declare -f restore 2>/dev/null)" ] && { process "Found function restore"; restore=true; }
 	[ "$(declare -f restore_cleanup 2>/dev/null)" ] && { process "Found function restore_cleanup"; restore_cleanup=true; }
 	success "Step 2 - done"
+	[ -d ./patchset ] && { out Appllying patches; ARG="$2" apply_patches; }
 	for function in ${functions[@]}; do
 		process "Executing $function"
 		$function || { error "Something went wrong while $function"
@@ -336,7 +356,7 @@ get|install|get-again)
 	[ $_do_chown -eq 1 ] && chown -R $_chown "$DIR"/local/"$2"
 	exit 0
 ;;
-info)
+info|show)
 	[ "$2" ] || die Enter the name of the script you want to look at
 	[ -d "$DIR"/database/"$2" ] || die "No script found with name $2"
 	source "$DIR"/database/"$2"/script
@@ -344,6 +364,7 @@ info)
 	for function_ in ${functions[@]}; do
 		declare -f $function_ &>/dev/null && found_functions+=("$function_")
 	done
+	[ -d "$DIR"/database/"$2"/patchset ] && patches="$(cat "$DIR"/database/"$2"/patchset/config | cut -d ":" -f 1 | tr "\n" " " | tr -d "+")"
 	rm -f "$DIR"/.temp_list*; touch "$DIR"/.temp_list_{1,2}
 	echo "Name:" >> "$DIR"/.temp_list_1; echo "$(basename $2)" >> "$DIR"/.temp_list_2
 	echo "Description:" >> "$DIR"/.temp_list_1; echo "$desc" >> "$DIR"/.temp_list_2
@@ -353,6 +374,7 @@ info)
 	[ "$aur" ] && { echo "Required AUR packages:" >> "$DIR"/.temp_list_1; echo "${aur[@]}" >> "$DIR"/.temp_list_2 ; }
 	[ "$get" ] && { echo "Links of files to be downloaded during the process:" >> "$DIR"/.temp_list_1; echo "$(for gets in ${get[@]}; do echo "$gets" | cut -d ":" -f 3-; done)" | tr "\n" ";" >> $DIR/.temp_list_2 ; }
 	echo "Found functions:" >> "$DIR"/.temp_list_1; echo "${found_functions[@]}" >> "$DIR"/.temp_list_2
+	[ "$patches" ] && { echo "Found patches:" >> "$DIR"/.temp_list_1; echo "${patches}" >> "$DIR"/.temp_list_2 ; }
 	awk 'FNR==1{f+=1;w++;}
      f==1{if(length>w) w=length; next;}
      f==2{printf("%-"w"s",$0); getline<f2; print;}
@@ -393,6 +415,7 @@ restore)
 		restore && restored=1 || error "Failed to restore"
 		declare -f restore_cleanup &>/dev/null && restore_cleanup
 	fi
+	out "Removing unnecessary packages"
 	after_pkg "$DIR/local/$2"
 	[ -d "$DIR"/local/"$2"/backup_place ] || { [ "$restored" == 1 ] || die "No backup folder found with name $2"; }
 	ARG="$2" restore_backup || die "Failed to restore backup"
@@ -407,7 +430,7 @@ clean)
 		cd "$pkg"
 		for file in ./*; do
 			case "$file" in
-				./script|./backup|./backup_place|./installed|./packages) : ;;
+				./script|./backup|./backup_place|./installed|./packages|./patchset) : ;;
 				*) rm -rf "$file" ;;
 			esac
 		done

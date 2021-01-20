@@ -15,7 +15,9 @@ The [ualsv_db](https://github.com/BiteDasher/ualsv_db.git) repository is availab
 ~~I'm still thinking about where I should store and whether I should store the script files for this program at all. But as soon as I do, I will definitely report it here.~~  And at the expense of writing your script, I will now show you one of the examples:
 ```
 test --- script
-    \___ backup
+   \\___ backup
+    \___ patchset - config
+                 \_ one.patch
 ```
 ```
 desc="test"
@@ -47,11 +49,23 @@ rm -r /tmp/trashcan
 /etc/backup.folder
 /etc/backup.symlink
 ```
+
+Next, `patchset`.
+
+**config** \
+```
++one.patch:/var/run/some/file
+second.patch:$HOME/some/file
+```
+By adding a `+` to the beginning of the line, you specify that the patch should be overlaid using `sudo` \
+In the field after the colon, you can use **variables**, as well as various characters, such as `~`. For their escape, `eval` is used
+
 **You can also look at the `example` folder, which contains a script to turn off tearing on Intel embedded**
 
 ## Recommendations:
 The `check` function is executed BEFORE installing packages from the `$packages` and `$aur` arrays. \
-If you want to list all the commands that the second `checkutils.sh` script provides, run `sed -n 's/^\([^(]\+\)()\s{$/\1/p' checkutils.sh`
+If you want to list all the commands that the second `checkutils.sh` script provides, run `sed -n 's/^\([^(]\+\)()\s{$/\1/p' checkutils.sh` \
+You can also put files that are not related to patches in the `patchset` folder. For example, something additional that will be used later during the execution of the script
 
 
 ## Dependencies:
