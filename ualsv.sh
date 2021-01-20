@@ -3,10 +3,10 @@ LIB="/usr/local/share/ualsv"
 source $LIB/checkutils.sh
 if [ "$(id -u)" == 0 ]; then
 	if [ -n "$U_HOME" ]; then
-		HOME="$U_HOME"
+		export HOME="$U_HOME"
 	else
 		if [ -n "$SUDO_USER" ]; then
-			HOME="$(getent passwd $SUDO_USER | cut -d ":" -f 6)"
+			export HOME="$(getent passwd $SUDO_USER | cut -d ":" -f 6)"
 		else
 			die "The script was run without sudo. Unable to get the real user's home directory. Run the script with the variable U_HOME=\"home/directory/location\""
 		fi
@@ -40,10 +40,10 @@ update_system() {
 	sudo pacman -Syu
 }
 install_pkgs() {
-	sudo pacman -S ${packages[@]} --asdeps --needed || die Failed to install packages
+	sudo pacman -S ${packages[@]} --needed || die Failed to install packages
 }
 install_aurs() {
-	yay -S ${aur[@]} --asdeps || die Failed to install packages from AUR using yay
+	yay -S ${aur[@]} || die Failed to install packages from AUR using yay
 }
 trapcom() {
 	error "Process termination signal received"
@@ -150,7 +150,7 @@ after_pkg() {
 [ "$1" ] && local place="$1" || local place=".."
 [ -f "$place"/packages ] || return 0
 [ -s "$place"/packages ] || return 0
-free_pkgs="$(pacman -Qdtq)"
+free_pkgs="$(pacman -Qtq)"
 while read -u 3 -r pkg; do
 	if [ "$(grep -x "$pkg" <<< "${free_pkgs}")" ]; then
 		sudo pacman -Rs $pkg
