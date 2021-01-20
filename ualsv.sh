@@ -96,6 +96,7 @@ list_scripts() {
 	# to delete all temporary files, we will try to delete them again,
 	# if they are, of course.
 	rm -f "$DIR"/.temp_list*; touch "$DIR"/.temp_list_{name,version,creator,status}
+	[ -z "$(find "$DIR"/database -mindepth 1)" ] && return 0
 	for script in "$DIR"/database/*; do
 		local name="$(basename "$script")"
 		local version="$(grep -o "^version=.*" "$script"/script | cut -d "=" -f 2- | tr -d \'\")"
@@ -126,6 +127,7 @@ list_scripts() {
 }
 list_scripts_local() {
 	rm -f "$DIR"/.temp_list*; touch "$DIR"/.temp_list_{name,version,creator,status}
+	[ -z "$(find "$DIR"/local -mindepth 1)" ] && return 0
 	for script in "$DIR"/local/*; do
 		local name="$(basename "$script")"
 		local version="$(grep -o "^version=.*" "$script"/script | cut -d "=" -f 2- | tr -d \'\")"
@@ -141,9 +143,18 @@ list_scripts_local() {
 		echo "$version" >> "$DIR"/.temp_list_version
 		echo "$creator" >> "$DIR"/.temp_list_creator
 		echo "$status" >> "$DIR"/.temp_list_status
+	awk 'BEGIN{ for(i=1; i<ARGC; i++) { 
+              while( (getline<ARGV[i])>0) { 
+                 nl[i]++; if(length>w[i]) w[i]=length; }
+              w[i]++; close(ARGV[i])
+              if(nl[i]>nr) nr=nl[i]; }
+            for(r=1; r<=nr; r++) {
+              for(f=1; f<ARGC; f++) {
+                if(r<=nl[f]) getline<ARGV[f]; else $0=""  
+                printf("%-"w[f]"s",$0); } 
+              print "" } }
+    ' "$DIR"/.temp_list_status "$DIR"/.temp_list_name "$DIR"/.temp_list_version "$DIR"/.temp_list_creator
 	done
-	# Like awk, but a little easier
-    paste "$DIR"/.temp_list_status "$DIR"/.temp_list_name "$DIR"/.temp_list_version "$DIR"/.temp_list_creator | column -tc 4
     rm "$DIR"/.temp_list*
 }
 after_pkg() {
