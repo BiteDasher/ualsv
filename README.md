@@ -52,7 +52,7 @@ rm -r /tmp/trashcan
 
 Next, `patchset`.
 
-**config** \
+**config**
 ```
 +one.patch:/var/run/some/file
 second.patch:$HOME/some/file
