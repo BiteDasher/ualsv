@@ -364,9 +364,9 @@ search)
 	for search in "$DIR"/database/*; do
 		name="$(basename $search)"
 		eval $(source "$search"/script; echo "desc=\"$desc\""; echo "version=\"$version\"")
-		total+=("~[ $name ] $version% $desc")
+		total+=("~[ \e[0;32m$name\e[0m ] $version% $desc")
 	done
-	echo ${total[@]} | tr "~" "\n" | grep -i "${@:2}" | sed "s/%/\n  /1"
+	echo -e ${total[@]} | tr "~" "\n" | grep -i "${@:2}" | sed "s/%/\n  /1"
 ;;
 remove)
 	[ "$2" ] || die Enter the name of the script you want to remove
