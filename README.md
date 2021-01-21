@@ -14,10 +14,13 @@ The [ualsv_db](https://github.com/BiteDasher/ualsv_db.git) repository is availab
 ## How/where to download scripts for this thing? How do I write my own?
 ~~I'm still thinking about where I should store and whether I should store the script files for this program at all. But as soon as I do, I will definitely report it here.~~  And at the expense of writing your script, I will now show you one of the examples:
 ```
-test --- script
-   \\___ backup
-    \___ patchset - config
-                 \_ one.patch
+test
+├── script
+├── backup
+└── patchset
+    ├── config
+    └── one.patch
+
 ```
 ```
 desc="test"
