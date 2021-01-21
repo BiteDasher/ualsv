@@ -43,7 +43,7 @@ install_pkgs() {
 	sudo pacman -S ${packages[@]} --needed || die Failed to install packages
 }
 install_aurs() {
-	yay -S ${aur[@]} || die Failed to install packages from AUR using yay
+	yay -S --answerclean y --answeredit n --answerupgrade y --removemake ${aur[@]} || die Failed to install packages from AUR using yay
 }
 trapcom() {
 	error "Process termination signal received"
