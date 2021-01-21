@@ -221,18 +221,17 @@ apply_patches() {
 	_count=0
 	while read -r patch; do
 		((_count++))
-		if [ "$(echo "$patch" | cut -c 1)" == "+" ]; then
-			p_name="$(echo "$patch" | cut -c 2- | cut -d ":" -f 1)"
+		case "${patch}" in
+			+*)
 			sudopatch=sudo
-		else
-			p_name="$(echo "$patch" | cut -d ":" -f 1)"
-			sudopatch=
-		fi
-		p_dest="$(eval echo "$patch" | cut -d ":" -f 2-)"
+			patch="${patch#+}" ;;
+			*)
+			sudopatch= ;;
+		esac
+		p_name="${patch%%:*}"
+		p_dest="$(eval echo "${patch##*:}")"
 		process "[$_count/$_all_count] Applying $p_name"
-		if [ -e "$p_dest" ]; then
-			:
-		else
+		if [ ! -e "$p_dest" ]; then
 			smallw "Skipping $p_name, because the file that is needed for the patch is not found"
 			continue
 		fi
@@ -339,6 +338,7 @@ get|install|get-again)
 	[ "$(declare -f restore_cleanup 2>/dev/null)" ] && { process "Found function restore_cleanup"; restore_cleanup=true; }
 	success "Step 2 - done"
 	[ -d ./patchset ] && { out Appllying patches; ARG="$2" apply_patches; }
+	[ "$__cleaned_pkgs" ] && echo "$__cleaned_pkgs" > "$DIR"/local/"$2"/packages
 	for function in ${functions[@]}; do
 		process "Executing $function"
 		$function || { error "Something went wrong while $function"
@@ -351,7 +351,6 @@ get|install|get-again)
 	[ "$do_cleanup" == true ] && { process "Executing cleanup"; cleanup; }
 	success "Step 3 - done"
 	touch "$DIR"/local/"$2"/installed
-	[ "$__cleaned_pkgs" ] && echo "$__cleaned_pkgs" > "$DIR"/local/"$2"/packages
 	success "$2 successfully applied!"
 	[ $_do_chown -eq 1 ] && chown -R $_chown "$DIR"/local/"$2"
 	exit 0
@@ -409,7 +408,7 @@ restore)
 	isroot "(restore backup files)"
 	[ "$2" ] || die Enter the name of the script you want to remove
 	[ -d "$DIR"/local/"$2" ] || die "No script found with name $2"
-	[ -f "$DIR"/local/"$2"/installed ] || die "This patch is not applied"
+	#[ -f "$DIR"/local/"$2"/installed ] || die "This patch is not applied"
 	source "$DIR"/local/"$2"/script
 	if declare -f restore &>/dev/null; then
 		restore && restored=1 || error "Failed to restore"
