@@ -172,10 +172,10 @@ ispe() {
 	fi
 }
 instpkg() {
-	sudo pacman -S $@ --noconfirm
+	sudo pacman -S $@
 }
 instaur() {
-	yay -S $@ --noconfirm
+	yay -S $@
 }
 rmpkg() {
 	[[ "$1" != ":"* ]] && { local pkgs="$@"; opt=; } || { local pkgs="${@:2}"; opt="${1##:}"; }

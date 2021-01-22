@@ -351,6 +351,7 @@ get|install|get-again)
 	[ "$do_cleanup" == true ] && { process "Executing cleanup"; cleanup; }
 	success "Step 3 - done"
 	touch "$DIR"/local/"$2"/installed
+	[ -f "$DIR"/local/"$2"/restored ] && rm "$DIR"/local/"$2"/restored
 	success "$2 successfully applied!"
 	[ $_do_chown -eq 1 ] && chown -R $_chown "$DIR"/local/"$2"
 	exit 0
@@ -409,6 +410,12 @@ restore)
 	[ "$2" ] || die Enter the name of the script you want to remove
 	[ -d "$DIR"/local/"$2" ] || die "No script found with name $2"
 	#[ -f "$DIR"/local/"$2"/installed ] || die "This patch is not applied"
+	YN=N user_read q_restore "This script has already been restored. You can remove it using '$(basename $0) remove $2'. Restore it again?"
+	case "$answer" in
+		yes) : ;;
+		no) exit 0 ;;
+	*) die Unknown answer ;;
+	esac
 	source "$DIR"/local/"$2"/script
 	if declare -f restore &>/dev/null; then
 		restore && restored=1 || error "Failed to restore"
@@ -418,7 +425,8 @@ restore)
 	after_pkg "$DIR/local/$2"
 	[ -d "$DIR"/local/"$2"/backup_place ] || { [ "$restored" == 1 ] || die "No backup folder found with name $2"; }
 	ARG="$2" restore_backup || die "Failed to restore backup"
-	rm "$DIR"/local/"$2"/installed
+	rm -f "$DIR"/local/"$2"/installed
+	touch "$DIR"/local/"$2"/restored
 	success "Done!"
 ;;
 update)
@@ -429,7 +437,7 @@ clean)
 		cd "$pkg"
 		for file in ./*; do
 			case "$file" in
-				./script|./backup|./backup_place|./installed|./packages|./patchset) : ;;
+				./restored|./script|./backup|./backup_place|./installed|./packages|./patchset) : ;;
 				*) rm -rf "$file" ;;
 			esac
 		done
