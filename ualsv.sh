@@ -278,6 +278,10 @@ list-local-s)
 	list_scripts_local q
 ;;
 get|install|get-again)
+	if [ "$(id -u)" -eq 0 ]; then
+		warning "It is highly undesirable to run this command from root. Most of the scripts can start to work incorrectly. Press Enter to continue, Ctrl-C for abort."
+		read -p "> "
+	fi
 	[ "$2" ] || die Enter the name of the script you want to apply
 	[ -d "$DIR"/database/"$2" ] || die "No script found with name $2"
 	out The process of getting and running script "$2" has begun
