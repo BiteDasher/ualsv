@@ -52,9 +52,11 @@ trapcom() {
 			rm -rf "$DIR"/local/"$__second_arg"/getdir
 			[ "$restore" == true ] && restore
 			[ "$restore_cleanup" == true ] && restore_cleanup
+			exit 0
 			;;
 		list*|search|info)
 			rm -f "$DIR"/.temp*
+			exit 0
 			;;
 		restore*)
 			:
