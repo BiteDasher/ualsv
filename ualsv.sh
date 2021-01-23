@@ -23,17 +23,15 @@ _chown="$(stat -c %u:%g $HOME)"
 	git clone "$SERVER" database
 	chown -R $_chown "$DIR"
 fi
-#####
-if [ "$(id -u):$(id -g)" == "$_chown" ]; then
-	_do_chown=0
-else
-	[ "$(id -u)" -eq 0 ] && _do_chown=1
-fi
-#####
 user="$(whoami)"
 isroot() {
 	if [[ $(id -u) -ne 0 ]]; then
-	die "This action requires superuser rights" $@
+	die "This action requires superuser rights" $*
+	fi
+}
+abortroot() {
+	if [[ $(id -u) -eq 0 ]]; then
+	die "It is highly undesirable to run this command from root. $*. Please, use your regular user account (i.e. not sudo/su)"
 	fi
 }
 update_system() {
@@ -91,7 +89,6 @@ get_files() {
 update_scripts() {
 	cd "$DIR"/database
 	git pull --ff-only || die Failed to git pull scripts
-	[ $_do_chown -eq 1 ] && chown -R $_chown ./
 }
 list_scripts() {
 	# If SIGKILL was made and the process did not manage 
@@ -173,7 +170,6 @@ while read -u 3 -r pkg; do
 done 3< "$place"/packages
 }
 restore_backup() {
-	isroot "(restore backup files)"
 	### Better safe than sorry
 	# If in some situation during this process the folder with the
 	# script is deleted and the chown command is executed, it may
@@ -280,10 +276,7 @@ list-local-s)
 	list_scripts_local q
 ;;
 get|install|get-again)
-	if [ "$(id -u)" -eq 0 ]; then
-		warning "It is highly undesirable to run this command from root. Most of the scripts can start to work incorrectly. Press Enter to continue, Ctrl-C for abort."
-		read -p "> "
-	fi
+	abortroot "Many scripts may start working incorrectly"
 	[ "$2" ] || die Enter the name of the script you want to apply
 	[ -d "$DIR"/database/"$2" ] || die "No script found with name $2"
 	out The process of getting and running script "$2" has begun
@@ -359,7 +352,6 @@ get|install|get-again)
 	touch "$DIR"/local/"$2"/installed
 	[ -f "$DIR"/local/"$2"/restored ] && rm "$DIR"/local/"$2"/restored
 	success "$2 successfully applied!"
-	[ $_do_chown -eq 1 ] && chown -R $_chown "$DIR"/local/"$2"
 	exit 0
 ;;
 info|show)
@@ -436,6 +428,7 @@ restore)
 	success "Done!"
 ;;
 update)
+	abortroot "Incorrect directory permissions may be overwritten during the update"
 	update_scripts
 ;;
 clean)
@@ -450,10 +443,10 @@ clean)
 	done
 ;;
 force-update)
+	abortroot "Incorrect directory permissions may be written during the update"
 	rm -rf "$DIR"/database
 	cd "$DIR"
 	git clone "$SERVER" database || die "Failed to git clone"
-	[ $_do_chown -eq 1 ] && chown -R $_chown ./database
 	success "Done!"
 ;;
 force-remove)
