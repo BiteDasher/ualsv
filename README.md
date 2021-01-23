@@ -82,6 +82,7 @@ You can also put files that are not related to patches in the `patchset` folder.
 `grep` \
 `pacman` \
 `sudo` \
+`patch` \
 `yay (AUR)`
 
 ## Function scheme from file `checkutils.sh`
