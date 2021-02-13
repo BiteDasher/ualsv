@@ -97,9 +97,14 @@ list_scripts() {
 	rm -f "$DIR"/.temp_list*; touch "$DIR"/.temp_list_{name,version,creator,status}
 	[ -z "$(find "$DIR"/database -mindepth 1)" ] && return 0
 	for script in "$DIR"/database/*; do
+		if [[ ! -f "$script"/script && -f "$script"/framework ]]; then
+			prefix=framework
+		else
+			prefix=script
+		fi
 		local name="$(basename "$script")"
-		local version="$(grep -o "^version=.*" "$script"/script | cut -d "=" -f 2- | tr -d \'\")"
-		local creator="$(grep -o "^creator=.*" "$script"/script | cut -d "=" -f 2- | tr -d \'\")"
+		local version="$(grep -o "^version=.*" "$script"/$prefix | cut -d "=" -f 2- | tr -d \'\")"
+		local creator="$(grep -o "^creator=.*" "$script"/$prefix | cut -d "=" -f 2- | tr -d \'\")"
 			if [ -f "$DIR/local/$name/installed" ]; then
 				local status="[X]"
 			else
@@ -128,9 +133,14 @@ list_scripts_local() {
 	rm -f "$DIR"/.temp_list*; touch "$DIR"/.temp_list_{name,version,creator,status}
 	[ -z "$(find "$DIR"/local -mindepth 1)" ] && return 0
 	for script in "$DIR"/local/*; do
+		if [[ ! -f "$script"/script && -f "$script"/framework ]]; then
+			prefix=framework
+		else
+			prefix=script
+		fi
 		local name="$(basename "$script")"
-		local version="$(grep -o "^version=.*" "$script"/script | cut -d "=" -f 2- | tr -d \'\")"
-		local creator="$(grep -o "^creator=.*" "$script"/script | cut -d "=" -f 2- | tr -d \'\")"
+		local version="$(grep -o "^version=.*" "$script"/$prefix | cut -d "=" -f 2- | tr -d \'\")"
+		local creator="$(grep -o "^creator=.*" "$script"/$prefix | cut -d "=" -f 2- | tr -d \'\")"
 			if [ -f "$DIR/local/$name/installed" ]; then
 				local status="[X]"
 			else
@@ -142,6 +152,7 @@ list_scripts_local() {
 		echo "$version" >> "$DIR"/.temp_list_version
 		echo "$creator" >> "$DIR"/.temp_list_creator
 		echo "$status" >> "$DIR"/.temp_list_status
+	done
 	awk 'BEGIN{ for(i=1; i<ARGC; i++) { 
               while( (getline<ARGV[i])>0) { 
                  nl[i]++; if(length>w[i]) w[i]=length; }
@@ -153,7 +164,6 @@ list_scripts_local() {
                 printf("%-"w[f]"s",$0); } 
               print "" } }
     ' "$DIR"/.temp_list_status "$DIR"/.temp_list_name "$DIR"/.temp_list_version "$DIR"/.temp_list_creator
-	done
     rm "$DIR"/.temp_list*
 }
 after_pkg() {
@@ -255,6 +265,7 @@ usage: ualsv [options] script
 	info/show	- Shows detailed information about the specified script
 	search		- Searches for possible scripts using name and description
 	install/get	- Download script and patch what is needed
+	fw/framework	- Execute the script from the patch
 	get-again	- Try to install a patch from a script that was installed locally, but not applied
 	remove		- Removes the script from the local database and all its data
 	restore		- Restores everything that the script touched during its work, as well as the installed status in the system
@@ -293,6 +304,7 @@ get|install|get-again)
 			esac
 		fi
 	cp -a -r "$DIR"/database/"$2" "$DIR"/local/
+	[[ ! -f "$DIR"/local/"$2"/script && ! -f "$DIR"/local/"$2"/backup ]] && { touch "$DIR"/local/"$2"/installed; success "Framework $2 installed!"; exit 0; }
 	fi ####
 	cd "$DIR"/local/"$2"
 	if [ -f ./backup ] && [ ! -f "$DIR"/local/"$2"/installed ]; then
@@ -354,9 +366,46 @@ get|install|get-again)
 	success "$2 successfully applied!"
 	exit 0
 ;;
+fw|framework)
+	[ "$2" ] || die Enter the name of the framework you want to look at
+	if [ -f "$DIR"/local/"$2"/framework ]; then
+		source "$DIR"/local/"$2"/framework
+	else
+		if [[ ! -f "$DIR"/database/"$2"/script && ! -f "$DIR"/database/"$2"/backup && -f "$DIR"/database/"$2"/framework ]]; then
+			msg "The patch is not installed locally, but there is no script and backup files in the remote repository. I use the framework from the repository(for local installation, install it manually)"
+			source "$DIR"/database/"$2"/framework
+		else
+			[ -d "$DIR"/local/"$2" ] || die "No locally installed script found with name $2"
+			[ -f "$DIR"/local/"$2"/framework ] || die "No locally installed framework found in $2"
+			source "$DIR"/local/"$2"/framework
+		fi
+	fi
+	shift 2
+	if [ -n "$possible_args" ]; then
+		while read -r arg_line; do
+			fw_arg="\$${arg_line%:*}"
+			fw_args="${arg_line##*:}"
+			eval case "$fw_arg" in "$fw_args"\) : \;\; \*\) error "\$fw_arg: Unknown argument: $fw_arg"\; [ "$(command -v print_help)" ] \&\& print_help\; exit 1 \;\; esac
+		done < <(echo "${possible_args[@]}" | tr ' ' '\n')
+	fi
+	framework "$@"
+;;
 info|show)
 	[ "$2" ] || die Enter the name of the script you want to look at
 	[ -d "$DIR"/database/"$2" ] || die "No script found with name $2"
+	if [[ ! -f "$DIR"/database/"$2"/script && -f "$DIR"/database/"$2"/framework ]]; then
+		source "$DIR"/database/"$2"/framework
+		echo "Framework name:" >> "$DIR"/.temp_list_1; echo "$(basename $2)" >> "$DIR"/.temp_list_2
+		echo "Description:" >> "$DIR"/.temp_list_1; echo "$desc" >> "$DIR"/.temp_list_2
+		echo "Version:" >> "$DIR"/.temp_list_1; echo "$version" >> "$DIR"/.temp_list_2
+		echo "Creator:" >> "$DIR"/.temp_list_1; echo "$creator" >> "$DIR"/.temp_list_2
+		awk 'FNR==1{f+=1;w++;}
+	     f==1{if(length>w) w=length; next;}
+	     f==2{printf("%-"w"s",$0); getline<f2; print;}
+	   ' f2="$DIR"/.temp_list_2 "$DIR"/.temp_list_1 "$DIR"/.temp_list_1
+		rm -f "$DIR"/.temp_list*
+		exit 0
+	fi
 	source "$DIR"/database/"$2"/script
 	functions=('check' 'build' 'action' 'cleanup' 'restore' 'restore_cleanup')
 	for function_ in ${functions[@]}; do
@@ -372,6 +421,8 @@ info|show)
 	[ "$aur" ] && { echo "Required AUR packages:" >> "$DIR"/.temp_list_1; echo "${aur[@]}" >> "$DIR"/.temp_list_2 ; }
 	[ "$get" ] && { echo "Links of files to be downloaded during the process:" >> "$DIR"/.temp_list_1; echo "$(for gets in ${get[@]}; do echo "$gets" | cut -d ":" -f 3-; done)" | tr "\n" ";" >> $DIR/.temp_list_2 ; }
 	echo "Found functions:" >> "$DIR"/.temp_list_1; echo "${found_functions[@]}" >> "$DIR"/.temp_list_2
+	[ -f "$DIR"/database/"$2"/framework ] && framework=yes || framework=no
+	echo "Framework:" >> "$DIR"/.temp_list_1; echo "$framework" >> "$DIR"/.temp_list_2
 	[ "$patches" ] && { echo "Found patches:" >> "$DIR"/.temp_list_1; echo "${patches}" >> "$DIR"/.temp_list_2 ; }
 	awk 'FNR==1{f+=1;w++;}
      f==1{if(length>w) w=length; next;}
@@ -383,6 +434,11 @@ search)
 	[ "$2" ] || die Enter your search query
 	for search in "$DIR"/database/*; do
 		name="$(basename $search)"
+		if [[ ! -f "$search"/script && -f "$search"/framework ]]; then
+			eval $(source "$search"/framework; echo "desc=\"$desc\""; echo "version=\"$version\"")
+			total+=("~( \e[0;33m$name\e[0m ) $version% $desc")
+			continue
+		fi
 		eval $(source "$search"/script; echo "desc=\"$desc\""; echo "version=\"$version\"")
 		total+=("~[ \e[0;32m$name\e[0m ] $version% $desc")
 	done
@@ -390,7 +446,7 @@ search)
 ;;
 remove)
 	[ "$2" ] || die Enter the name of the script you want to remove
-	[ -d "$DIR"/database/"$2" ] || die "No script found with name $2"
+	[ -d "$DIR"/local/"$2" ] || die "No script found with name $2"
 		if [ -d "$DIR"/local/"$2"/backup ] && [ -f "$DIR"/local/"$2"/installed ]; then
 		YN=N user_read zero "A directory with a backup copy was found for script "$2". Continue?"
 		case "$answer" in
@@ -408,12 +464,18 @@ restore)
 	[ "$2" ] || die Enter the name of the script you want to remove
 	[ -d "$DIR"/local/"$2" ] || die "No script found with name $2"
 	#[ -f "$DIR"/local/"$2"/installed ] || die "This patch is not applied"
+	if [ -f "$DIR"/local/"$2"/restored ]; then
 	YN=N user_read q_restore "This script has already been restored. You can remove it using '$(basename $0) remove $2'. Restore it again?"
 	case "$answer" in
-		yes) : ;;
+		yes) rm "$DIR"/local/"$2"/restored ;;
 		no) exit 0 ;;
 	*) die Unknown answer ;;
 	esac
+	fi
+	if [ ! -f "$DIR"/local/"$2"/script ]; then
+		smallw "This patch does not have a script file. Most likely, it's just a framework"
+		exit 0
+	fi
 	source "$DIR"/local/"$2"/script
 	if declare -f restore &>/dev/null; then
 		restore && restored=1 || error "Failed to restore"
@@ -436,7 +498,7 @@ clean)
 		cd "$pkg"
 		for file in ./*; do
 			case "$file" in
-				./restored|./script|./backup|./backup_place|./installed|./packages|./patchset) : ;;
+				./restored|./script|./backup|./backup_place|./installed|./packages|./patchset|./framework) : ;;
 				*) rm -rf "$file" ;;
 			esac
 		done
