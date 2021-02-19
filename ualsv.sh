@@ -303,6 +303,15 @@ get|install|get-again)
 				*) die Unknown answer ;;
 			esac
 		fi
+		if [ -f "$DIR"/local/"$2"/restored ]; then
+			warning "The \"$2\" script has already been installed and restored."
+			YN=N user_read zero "This script has already been restored. Reinstall it again?"
+			case "$answer" in
+				yes) remove_script "$2" || error "Something went wrong while deleting the script folder from the local database" ;;
+				no) exit 0 ;;
+				*) die Unknown answer ;;
+			esac
+		fi
 	cp -a -r "$DIR"/database/"$2" "$DIR"/local/
 	[[ ! -f "$DIR"/local/"$2"/script && ! -f "$DIR"/local/"$2"/backup ]] && { touch "$DIR"/local/"$2"/installed; success "Framework $2 installed!"; exit 0; }
 	fi ####
@@ -476,6 +485,7 @@ restore)
 		smallw "This patch does not have a script file. Most likely, it's just a framework"
 		exit 0
 	fi
+	CURDIR="$DIR/local/$2"
 	source "$DIR"/local/"$2"/script
 	if declare -f restore &>/dev/null; then
 		restore && restored=1 || error "Failed to restore"
