@@ -196,7 +196,7 @@ restore_backup() {
 	fi
 	cd "$DIR"/local/"$ARG"/backup_place
 	while read -r restore_file; do
-		[[ ! -e "$restore_file" ]] && continue
+		[[ ! -e ".$restore_file" ]] && continue
 		local mode="$(stat -c %a ".$restore_file")"
 		local type="$(stat -c %f ".$restore_file")"
 		case $type in
@@ -293,9 +293,10 @@ get|install|get-again)
 	out The process of getting and running script "$2" has begun
 	if [[ "$1" == "get-again" ]]; then ####
 		[ -f "$DIR"/local/"$2"/installed ] && die "Patch already applied :)"
+		[ -d "$DIR"/local/"$2" ] || die "The directory does not exist. Install the script using the get parameter instead of get-again"
 	else
 		if [ -f "$DIR"/local/"$2"/installed ]; then
-			warning "The directory with script $2 already exists. Use the get-again parameter"
+			warning "The \"$2\" script has already been installed."
 			YN=N user_read zero "This script has already been applied. Reinstall without restoring the backup?"
 			case "$answer" in
 				yes) remove_script "$2" || error "Something went wrong while deleting the script folder from the local database" ;;
@@ -305,16 +306,17 @@ get|install|get-again)
 		fi
 		if [ -f "$DIR"/local/"$2"/restored ]; then
 			warning "The \"$2\" script has already been installed and restored."
-			YN=N user_read zero "This script has already been restored. Reinstall it again?"
+			YN=Y user_read zero "This script has already been restored. Reinstall it again?"
 			case "$answer" in
 				yes) remove_script "$2" || error "Something went wrong while deleting the script folder from the local database" ;;
 				no) exit 0 ;;
 				*) die Unknown answer ;;
 			esac
 		fi
-	cp -a -r "$DIR"/database/"$2" "$DIR"/local/
-	[[ ! -f "$DIR"/local/"$2"/script && ! -f "$DIR"/local/"$2"/backup ]] && { touch "$DIR"/local/"$2"/installed; success "Framework $2 installed!"; exit 0; }
+		[ -d "$DIR"/local/"$2" ] && rm -rf "$DIR"/local/"$2"
+		cp -ax "$DIR"/database/"$2" "$DIR"/local/
 	fi ####
+	[[ ! -f "$DIR"/local/"$2"/script && ! -f "$DIR"/local/"$2"/backup ]] && { touch "$DIR"/local/"$2"/installed; success "Framework $2 installed!"; exit 0; }
 	cd "$DIR"/local/"$2"
 	if [ -f ./backup ] && [ ! -f "$DIR"/local/"$2"/installed ]; then
 		rm -rf backup_place
