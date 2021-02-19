@@ -18,8 +18,9 @@ test
 ├── script
 ├── backup
 ├── framework
-└── patchset
-    ├── config
+└── files
+    ├── patch.conf
+    ├── something.desktop
     └── one.patch
 
 ```
@@ -65,9 +66,9 @@ echo $1 $2
 }
 ```
 
-Next, `patchset`.
+Next, `files`.
 
-**config**
+**patch.conf**
 ```
 +one.patch:/var/run/some/file
 second.patch:$HOME/some/file
@@ -80,7 +81,7 @@ In the field after the colon, you can use **variables**, as well as various char
 ## Recommendations:
 The `check` function is executed BEFORE installing packages from the `$packages` and `$aur` arrays. \
 If you want to list all the commands that the second `checkutils.sh` script provides, run `sed -n 's/^\([^(]\+\)()\s{$/\1/p' checkutils.sh` \
-You can also put files that are not related to patches in the `patchset` folder. For example, something additional that will be used later during the execution of the script \
+You can also put files that are not related to patches in the `files` folder. For example, something additional that will be used later during the execution of the script \
 You can download only frameworks (without patches and script file).
 
 

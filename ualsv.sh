@@ -82,8 +82,8 @@ get_files() {
 	case "${source_get_mtd}" in
 		wget) wget -O "$getdir"/"$place" "$address" -q --show-progress;;
 		curl) curl -L -o "$getdir"/"$place" --progress-bar "$address";;
-		git) git clone "$address" "$getdir"/"$place" 1>/dev/null;;
-		esac
+		git) place="${place%.git*}"; git clone "$address" "$getdir"/"$place" 1>/dev/null;;
+	esac
 	done
 }
 update_scripts() {
@@ -224,8 +224,8 @@ save_backup() {
 	success Backup done
 }
 apply_patches() {
-	cd "$DIR"/local/"$ARG"/patchset
-	_all_count="$(find . -mindepth 1 -not -path "./config" | wc -l)"
+	cd "$DIR"/local/"$ARG"/files
+	_all_count="$(cat patch.conf | wc -l)"
 	_count=0
 	while read -r patch; do
 		((_count++))
@@ -244,7 +244,7 @@ apply_patches() {
 			continue
 		fi
 		$sudopatch patch --quiet -N -p 0 "$p_dest" ./"$p_name" || warning "Something went wrong while patching $p_dest"
-	done < ./config
+	done < ./patch.conf
 }
 remove_script() {
 	rm -rf "$DIR"/local/"$1" || return 1
@@ -348,7 +348,7 @@ get|install|get-again)
 	[ "$(declare -f restore 2>/dev/null)" ] && { process "Found function restore"; restore=true; }
 	[ "$(declare -f restore_cleanup 2>/dev/null)" ] && { process "Found function restore_cleanup"; restore_cleanup=true; }
 	success "Step 2 - done"
-	[ -d ./patchset ] && { out Appllying patches; ARG="$2" apply_patches; }
+	[ -f ./files/patch.conf ] && { out Appllying patches; ARG="$2" apply_patches; }
 	[ "$__cleaned_pkgs" ] && echo "$__cleaned_pkgs" > "$DIR"/local/"$2"/packages
 	for function in ${functions[@]}; do
 		process "Executing $function"
@@ -411,7 +411,7 @@ info|show)
 	for function_ in ${functions[@]}; do
 		declare -f $function_ &>/dev/null && found_functions+=("$function_")
 	done
-	[ -d "$DIR"/database/"$2"/patchset ] && patches="$(cat "$DIR"/database/"$2"/patchset/config | cut -d ":" -f 1 | tr "\n" " " | tr -d "+")"
+	[ -f "$DIR"/database/"$2"/files/patch.conf ] && patches="$(cat "$DIR"/database/"$2"/files/patch.conf | cut -d ":" -f 1 | tr "\n" " " | tr -d "+")"
 	rm -f "$DIR"/.temp_list*; touch "$DIR"/.temp_list_{1,2}
 	echo "Name:" >> "$DIR"/.temp_list_1; echo "$(basename $2)" >> "$DIR"/.temp_list_2
 	echo "Description:" >> "$DIR"/.temp_list_1; echo "$desc" >> "$DIR"/.temp_list_2
@@ -498,7 +498,7 @@ clean)
 		cd "$pkg"
 		for file in ./*; do
 			case "$file" in
-				./restored|./script|./backup|./backup_place|./installed|./packages|./patchset|./framework) : ;;
+				./restored|./script|./backup|./backup_place|./installed|./packages|./files|./framework) : ;;
 				*) rm -rf "$file" ;;
 			esac
 		done
