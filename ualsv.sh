@@ -64,7 +64,7 @@ trapcom() {
 trap trapcom SIGTERM SIGKILL SIGINT
 # Function for downloading files from array "get" #
 get_files() {
-	getdir="$CURDIR/getdir"
+	export getdir="$CURDIR/getdir"
 	[ -d "$getdir" ] || mkdir "$getdir"
 	for get_ in ${get[@]}; do
 	local source_get_mtd="$(echo $get_ | cut -d ":" -f 1)"
@@ -249,6 +249,9 @@ apply_patches() {
 remove_script() {
 	rm -rf "$DIR"/local/"$1" || return 1
 }
+backdir() {
+	cd "$CURDIR"
+}
 # We add arguments, since trapcom must somehow get the
 # current arguments from the running shell, instead of its own (in the function)
 __first_arg="$1"
@@ -317,7 +320,8 @@ get|install|get-again)
 		cp -ax "$DIR"/database/"$2" "$DIR"/local/
 	fi ####
 	[[ ! -f "$DIR"/local/"$2"/script && ! -f "$DIR"/local/"$2"/backup ]] && { touch "$DIR"/local/"$2"/installed; success "Framework $2 installed!"; exit 0; }
-	cd "$DIR"/local/"$2"
+	CURDIR="$DIR/local/$2"
+	backdir #
 	if [ -f ./backup ] && [ ! -f "$DIR"/local/"$2"/installed ]; then
 		rm -rf backup_place
 		mkdir backup_place
@@ -325,10 +329,8 @@ get|install|get-again)
 		BACKUP=1
 	fi
 	# If the backup was not made, there was no move to the folder with it.
-	# Let's check if we are in the correct catalog now
-	[ ! -f ./script ] && cd ..
+	backdir #
 	source ./script
-	CURDIR="$(pwd)"
 	[ "$get" ] && { out "Downloading the required files started"; get_files || die "Something went wrong while receiving"; }
 	if [ "$(declare -f check 2>/dev/null)" ]; then
 		out "Found function check. Executing..."
@@ -359,16 +361,17 @@ get|install|get-again)
 	[ "$(declare -f restore 2>/dev/null)" ] && { process "Found function restore"; restore=true; }
 	[ "$(declare -f restore_cleanup 2>/dev/null)" ] && { process "Found function restore_cleanup"; restore_cleanup=true; }
 	success "Step 2 - done"
-	[ -f ./files/patch.conf ] && { out Appllying patches; ARG="$2" apply_patches; }
+	[ -f ./files/patch.conf ] && { out Appllying patches; ARG="$2" apply_patches; }; backdir #
 	[ "$__cleaned_pkgs" ] && echo "$__cleaned_pkgs" > "$DIR"/local/"$2"/packages
 	for function in ${functions[@]}; do
 		process "Executing $function"
 		$function || { error "Something went wrong while $function"
-				[ "$restore" == true ] && restore
-				[ "$restore_cleanup" == true ] && restore_cleanup
+				[ "$restore" == true ] && restore; backdir #
+				[ "$restore_cleanup" == true ] && restore_cleanup; backdir #
 				[ "$BACKUP" == 1 ] && warning "If you see this message, run command 'sudo $(basename $0) restore $2' after it"
 				exit 1
 			     }
+		backdir #
 	done
 	[ "$do_cleanup" == true ] && { process "Executing cleanup"; cleanup; }
 	success "Step 3 - done"
@@ -490,8 +493,8 @@ restore)
 	CURDIR="$DIR/local/$2"
 	source "$DIR"/local/"$2"/script
 	if declare -f restore &>/dev/null; then
-		restore && restored=1 || error "Failed to restore"
-		declare -f restore_cleanup &>/dev/null && restore_cleanup
+		restore && restored=1 || error "Failed to restore"; backdir #
+		declare -f restore_cleanup &>/dev/null && restore_cleanup; backdir #
 	fi
 	out "Removing unnecessary packages"
 	after_pkg "$DIR/local/$2"
