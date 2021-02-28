@@ -88,7 +88,13 @@ get_files() {
 }
 update_scripts() {
 	cd "$DIR"/database
-	git pull --ff-only || die Failed to git pull scripts
+	if ! git pull --ff-only; then
+		{
+		git fetch --all
+		git reset --hard HEAD
+		git pull origin master --force
+		} || die Failed to git pull scripts
+	fi
 }
 list_scripts() {
 	# If SIGKILL was made and the process did not manage 
