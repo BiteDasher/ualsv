@@ -552,6 +552,7 @@ force-remove)
 		;;
 		hook)
 		update_scripts
+		chown -R $_chown "$DIR"
 		;;
 	esac
 ;;
