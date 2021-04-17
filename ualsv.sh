@@ -69,7 +69,7 @@ get_files() {
 	for get_ in ${get[@]}; do
 	local source_get_mtd="$(echo $get_ | cut -d ":" -f 1)"
 	local place="$(echo $get_ | cut -d ":" -f 2)"
-	local address="$(echo $_get | cut -d ":" -f 3-)"
+	local address="$(echo $get_ | cut -d ":" -f 3-)"
 	# If instead of the destination file we have empty, or "-",
 	# we use as the name everything that is after the last slash in the "address" column
 	if [ "$place" == "-" ] || [ -z "$place" ]; then
